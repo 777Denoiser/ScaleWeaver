@@ -32,6 +32,7 @@ timeNow = lambda : time.strftime('%Y_%m_%d__%H_%M_%S', time.localtime())
 
 version = '2015-04'
 
+
 def initialize():
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'M:chf:t:v:s:Tp:o:v:w:', ['help', 'citation', 'input_path=', 'output_path=', 'graph_type', 'seed=', 'test', 'params=', 'visualizer=', 'verbose=', 'metrics:'])
