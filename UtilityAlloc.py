@@ -11,7 +11,7 @@ import networkx as nx
 import pdb
 import cPickle
 import algorithms
-import community
+import CommDir
 
 np.seterr(all='raise')
 

@@ -9,9 +9,9 @@ import networkx as nx
 import pdb
 import cPickle
 import gc
-import simpletesters
-import graphutils
-import alternatives #module might be refered in params['algorithm']
+import TestScripts
+import UtilityAlloc
+import AltAlgo #module might be refered in params['algorithm']
 
 np.seterr(all='raise')
 

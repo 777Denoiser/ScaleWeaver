@@ -19,9 +19,9 @@ import re
 import pdb
 import cPickle
 import algorithms
-import graphutils
-import simpletesters
-import alternatives
+import UtilityAlloc
+import TestScripts
+import AltAlgo
 try:
     import new_algs #for testing
 except:
