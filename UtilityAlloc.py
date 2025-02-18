@@ -359,7 +359,7 @@ def color_by_3d_distances(G, verbose):
     cm=pylab.get_cmap('RdBu')  #UFL
 
     if verbose:
-        print 'Computing edge colors ...'
+        print('Computing edge colors ...')
     max_dis = 0
     positions = {}
     for u,v,data in G.edges_iter(data=True):
@@ -427,11 +427,13 @@ def compare_nets(old_G, new_G, metrics=None, params={}):
         num_changed_nodes = len(delta['new_nodes']) + len(delta['del_nodes'])
         num_changed_edges = len(delta['new_edges']) + len(delta['del_edges'])
         if old_G.number_of_nodes() > 0:
-            print 'New or deleted Nodes: %d (%.1f%%)'%(num_changed_nodes, 100*float(num_changed_nodes)/old_G.number_of_nodes())
-            print 'New or deleted Edges: %d (%.1f%%)'%(num_changed_edges, 100*float(num_changed_edges)/old_G.number_of_edges())
+            print('New or deleted Nodes: %d (%.1f%%)' % (
+            num_changed_nodes, 100 * float(num_changed_nodes) / old_G.number_of_nodes()))
+            print('New or deleted Edges: %d (%.1f%%)' % (
+            num_changed_edges, 100 * float(num_changed_edges) / old_G.number_of_edges()))
             print
-        print 'Name\t\t\tOld G\t\tNew G\t\tRelative Error'
-        print 'statistics start ------------------------------------------------------------'
+        print('Name\t\t\tOld G\t\tNew G\t\tRelative Error')
+        print('statistics start ------------------------------------------------------------')
     for met_info in metrics:
         met_name = met_info['name']
         met_func = met_info['function']
@@ -459,16 +461,16 @@ def compare_nets(old_G, new_G, metrics=None, params={}):
                 else:
                     outstr += ('\t%.'+str(precision)+'f    ')%new_value
                 outstr += ('\t%.'+str(precision)+'f%%')%(100*error)
-                print outstr
+                print(outstr)
                 #print formatstring%(old_value,new_value,100*error)
             errors[met_name] = (old_value, new_value, error)
-        except Exception,inst:
-            print
-            print 'Warning: could not compute '+met_name + ': '+str(inst)
+        except Exception as inst:
+            print()
+            print('Warning: could not compute ' + met_name + ': ' + str(inst))
     mean_error = np.average([np.abs(v[2]) for v in errors.values() if (v[2]!=np.NaN) and abs(v[2]-METRIC_ERROR) > 1])
     if verbose:
-        print 'statistics end ------------------------------------------------------------'
-        print 'Mean absolute difference: %.2f%%'%(100*mean_error)
+        print('statistics end ------------------------------------------------------------')
+        print('Mean absolute difference: %.2f%%' % (100 * mean_error))
 
     return mean_error, errors
 
@@ -479,10 +481,10 @@ def degree_assortativity(G):
     elif hasattr(nx, 'degree_assortativity'):
         return nx.degree_assortativity(G)
     else:
-        raise ValueError, 'Cannot compute degree assortativity: method not available'
+        raise ValueError('Cannot compute degree assortativity: method not available')
 
 def drake_hougardy_slow(G):
-#uses an implementation close to the pseudo-code in the paper
+#uses an implementation close to the pseudo-code in a stackoverflow paper
     assert not G.is_directed()
     H = nx.Graph()
     for u,v,d in G.edges(data=True):
@@ -642,20 +644,20 @@ def graph_sanity_test(G, params=None):
         print 'Warning: no nodes'
         ok = False
     elif G.has_node(None):
-        print 'Node with label "None" is in the graph.'
+        print('Node with label "None" is in the graph.')
         ok = False
     elif G.number_of_edges() == 0:
-        print 'Warning: no edges'
+        print('Warning: no edges')
         ok = False
     elif G.is_directed():
-        print 'Warning: the algorithm DOES NOT support directed graphs for now'
+        print('Warning: the algorithm DOES NOT support directed graphs for now')
         ok = False
 
     if ok:
         selfloops = G.selfloop_edges()
         if selfloops != []:
-            print 'Warning: self-loops detected (%d)'%len(selfloops)
-            print 'Deleting!'
+            print('Warning: self-loops detected (%d)' % len(selfloops))
+            print('Deleting!')
             G.remove_edges_from(selfloops)
             ok = False
 
@@ -1183,15 +1185,15 @@ def write_graph(G, path, params={}, list_types_and_exit=False):
     if graph_type in writers:
         try:
             writers[graph_type](G=G, path=path, **write_params)
-        except Exception, inst:
-            print 'Graph write error:'
-            print inst
+        except Exception as inst:
+            print('Graph write error:')
+            print(inst)
 
-            print 'Attempting to write to DOT format'
+            print('Attempting to write to DOT format')
             nx.drawing.nx_agraph.write_dot(G, path)
-            print 'Done.'
+            print('Done.')
     else:
-        raise Exception,'Unable to write graphs of type: '+str(graph_type)
+        raise Exception('Unable to write graphs of type: ' + str(graph_type))
 
 
 #runningtime based on the power on the V or E.  e.g. 1 linear, 2 quadratic etc.

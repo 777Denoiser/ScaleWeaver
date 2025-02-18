@@ -108,7 +108,7 @@ def chart_paths(G, source, new_edge_horizon, search_method='particles', params=N
             estimate_of_paths = (source_nbs.__len__() - num_missed_neighbors) * estimate_of_paths / sum(estimate_of_paths)
         num_misses = None #N/A
     else:
-        raise ValueError, 'Unknown search method'
+        raise ValueError('Unknown search method')
 
     #return estimate_of_paths, num_misses
     #WARNING: many of our results were based on setting this to 0.
@@ -259,7 +259,7 @@ def do_coarsen(G, params):
     algorithm_for_coarsening      = params.get('algorithm_for_coarsening', seed_finder_matching) #alt: seed_finder_weight_alg
     seeds, home_nodes, aggregates = algorithm_for_coarsening(G, params)
     if params.get('verbose', True):
-        print 'nn: %d ne: %d (seeds: %d)'%(G.number_of_nodes(),G.number_of_edges(),len(seeds))
+        print('nn: %d ne: %d (seeds: %d)' % (G.number_of_nodes(), G.number_of_edges(), len(seeds)))
 
     free_edges = set()        #edges not within any coarse node.  they will be retained in the coarse graph (many-to-one mapping)
     for seed in seeds:
@@ -362,10 +362,10 @@ def edit_edges_sequential(G, edge_edit_rate, edge_growth_rate, tpl_data, params)
         print_warning(params, 'Bad or truncated edge growth rate information!  Defaulting to 0')
         growth_rate = 0.
     if verbose:
-        print '  Edge rates: edit %f, growth %f'%(edit_rate,growth_rate)
+        print('  Edge rates: edit %f, growth %f' % (edit_rate, growth_rate))
     if G.number_of_nodes() == 0:
         if verbose:
-            print 'Num nodes = 0 ... editing canceled'
+            print('Num nodes = 0 ... editing canceled')
         return G
 
     new_edge_horizon   = params.get('new_edge_horizon', estimate_horizon(G))  #no edges added to nodes beyond the horizon
@@ -464,7 +464,7 @@ def edit_edges_sequential(G, edge_edit_rate, edge_growth_rate, tpl_data, params)
         if nx.density(G) > 0.6:
             print_warning(params, 'Is the graph too dense? Density=%.2f'%nx.density(G))
     if verbose:
-        print '\tadded edges: %d, deleted edges: %d'%(num_edges_added,num_edges_deleted)
+        print('\tadded edges: %d, deleted edges: %d' % (num_edges_added, num_edges_deleted))
 
     if 'edit_edges_tester' in params:
         params['edit_edges_tester'](G, added_edges_set, deled_edges_set, tpl_data)
@@ -477,7 +477,7 @@ def edit_edges_sequential(G, edge_edit_rate, edge_growth_rate, tpl_data, params)
 def edit_nodes_sequential(G, node_edit_rate, node_growth_rate, tpl_data, params):
     verbose = params.get('verbose', True)
     if verbose:
-        print 'nn: %d'%G.number_of_nodes()
+        print('nn: %d' % G.number_of_nodes())
     try:
         edit_rate = node_edit_rate != [] and float(node_edit_rate[0]) or 0.
         if edit_rate < 0. or edit_rate > 1.: raise
@@ -490,10 +490,10 @@ def edit_nodes_sequential(G, node_edit_rate, node_growth_rate, tpl_data, params)
         print_warning(params, 'Bad or truncated node growth rate information!  Defaulting to 0')
         growth_rate = 0.
     if verbose:
-        print '  Node rates: edit %f, growth %f'%(edit_rate,growth_rate)
+        print('  Node rates: edit %f, growth %f' % (edit_rate, growth_rate))
     if G.number_of_nodes() == 0:
         if verbose:
-            print 'Num nodes = 0 ... editing canceled'
+            print('Num nodes = 0 ... editing canceled')
         return G
 
     new_edge_horizon   = params.get('new_edge_horizon', estimate_horizon(G))  #no edges added to nodes beyond the horizon
@@ -571,8 +571,8 @@ def edit_nodes_sequential(G, node_edit_rate, node_growth_rate, tpl_data, params)
         if nx.density(G) > 0.6:
             print_warning(params, 'Is the graph too dense? Density=%.2f'%nx.density(G))
     if verbose:
-        print '\tadded nodes: %d, deleted nodes: %d'%(num_added_nodes,num_deleted_nodes)
-        print '\tadded edges: %d, deleted edges: %d'%(num_edges_added,num_edges_deleted)
+        print('\tadded nodes: %d, deleted nodes: %d' % (num_added_nodes, num_deleted_nodes))
+        print('\tadded edges: %d, deleted edges: %d' % (num_edges_added, num_edges_deleted))
 
     if 'edit_nodes_tester' in params:
         params['edit_nodes_tester'](G, added_nodes_set, deled_nodes_set, tpl_data)
@@ -780,7 +780,8 @@ def generate_graph(original, params=None):
             alg_method           = alg_info[0]
             params2['algorithm'] = alg_info[1]
         else:
-            raise ValueError, 'algorithm parameter should be either callable, the name of a function, or (func,(nested_algorithm))'
+            raise ValueError(
+                'algorithm parameter should be either callable, the name of a function, or (func,(nested_algorithm))')
         return alg_method(original=original, params=params2)
 
     simpletesters.validate_params(params)
@@ -807,7 +808,7 @@ def generate_graph(original, params=None):
                                 edge_growth_rate=edge_growth_rate,
                                 params=params)
     if params.get('verbose', True):
-        print 'replica is finished. nn: %d.  time: %.2f sec.'%(replica.number_of_nodes(), time.time()-start_time)
+        print('replica is finished. nn: %d.  time: %.2f sec.' % (replica.number_of_nodes(), time.time() - start_time))
         print
 
     replica      = resample_attributes(G, replica, model_map, params)
@@ -924,7 +925,7 @@ def interpolate_nodes(G, c_data, model_map, params):
         #might optionally pass an attribute 'new' in the node
         #num_added_nodes += len(my_trapped_nodes)
     if params.get('verbose', True):
-        print '  from new aggregates: %d nodes, %d edges'%(num_new_nodes,num_new_edges)
+        print('  from new aggregates: %d nodes, %d edges' % (num_new_nodes, num_new_edges))
     #print 'added: %d'%num_added_nodes
 
     if params.get('deep_copying', True):
@@ -966,7 +967,7 @@ def musketeer_snapshots(original, params=None):
         graphs.append(replica)
 
     if params.get('verbose', True):
-        print 'Snapshots complete.'
+        print('Snapshots complete.')
         print
 
     replica.snapshots = graphs
@@ -1001,12 +1002,13 @@ def new_node_label(G):
         if label not in G:
             break
     if label == None:
-        raise Exception, 'Could not find a unique label for a newly-added node'
+        raise Exception('Could not find a unique label for a newly-added node')
     return label
 
 def print_warning(params, str):
     if not params.get('suppress_warnings', False):
-        print str
+        print(str)
+
 
 def resample_attributes(G, replica, model_map, params):
 #inserts attributes to new nodes and edges by COPYING data from existing nodes and edges
@@ -1021,7 +1023,7 @@ def resample_attributes(G, replica, model_map, params):
     G_neighbors = lambda u: G_adj[u].keys()
     if maintain_node_attributes:
         if params.get('verbose', True):
-            print 'Updating node attributes ...'
+            print('Updating node attributes ...')
         for node in replica:
             if replica.node[node] != {}:
                 continue
@@ -1036,7 +1038,7 @@ def resample_attributes(G, replica, model_map, params):
 
     if maintain_edge_attributes and G.number_of_edges() > 0:
         if params.get('verbose', True):
-            print 'Updating edge attributes ...'
+            print('Updating edge attributes ...')
         for edge in replica.edges_iter():
             if replica.get_edge_data(*edge) != {}:
                 continue
@@ -1070,12 +1072,12 @@ def revise_graph(G, level, node_edit_rate, node_growth_rate, edge_edit_rate, edg
     if no_more_coarse or excess_density:
         if excess_density:
             if params.get('verbose', True):
-                print 'Coarsening stopped due to excess density'
+                print('Coarsening stopped due to excess density')
                 if not no_more_coarse:
-                    print 'Editing at deeper levels is impossible.  CHANGE editing parameters.'
+                    print('Editing at deeper levels is impossible.  CHANGE editing parameters.')
         if params.get('verbose', True):
-            print 'Final coarsening level. nodes: %d, edges: %d'%(G.number_of_nodes(), G.number_of_edges())
-            print '---------------------------------------------'
+            print('Final coarsening level. nodes: %d, edges: %d' % (G.number_of_nodes(), G.number_of_edges()))
+            print('---------------------------------------------')
         if params.get('memoriless_interpolation', False):
             G_prime = flush_graph(G)
         else:
