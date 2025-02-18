@@ -4,13 +4,13 @@ import numpy as np
 import numpy.random as npr
 import random, sys
 import networkx as nx
-# import matplotlib
-# matplotlib.use('PDF')
-# import matplotlib.pylab as pylab
-# import pylab
+import matplotlib
+matplotlib.use('PDF')
+import matplotlib.pylab as pylab
+import pylab
 import pdb
 import cPickle
-import graphutils
+import UtilityAlloc
 
 np.seterr(all='raise')
 
@@ -18,7 +18,7 @@ timeNow = lambda: time.strftime('%Y_%m_%d__%H_%M_%S', time.localtime())
 
 
 def integrity_test():
-    import algorithms
+    import MainAlgo
     print
     'Integrity testing ...'
     graphs = {'karate': nx.generators.karate_club_graph(),
@@ -33,9 +33,9 @@ def integrity_test():
     for name, G in graphs.items():
         print
         name
-        replica = algorithms.generate_graph(original=G, params=params)
+        replica = MainAlgo.generate_graph(original=G, params=params)
 
-        diff = graphutils.graph_graph_delta(G, replica)
+        diff = UtilityAlloc.graph_graph_delta(G, replica)
         assert diff['new_nodes'] == []
         assert diff['del_edges'] == []
         assert diff['new_nodes'] == []
@@ -46,7 +46,7 @@ def integrity_test():
 
 
 def iterated_test(seed=None, testparams=None, params=None):
-    import algorithms
+    import MainAlgo
     print
     'Starting iterative replication test...'
     if seed == None:
@@ -73,7 +73,7 @@ def iterated_test(seed=None, testparams=None, params=None):
         G.add_edges_from(nx.path_graph(nn).edges())
     else:
         G = testparams['G']
-    alg = testparams.get('algorithm', algorithms.generate_graph)
+    alg = testparams.get('algorithm', MainAlgo.generate_graph)
 
     num_rounds = testparams.get('num_rounds', 10)
     print
@@ -90,7 +90,7 @@ def iterated_test(seed=None, testparams=None, params=None):
 
 
 def smoke_test():
-    import algorithms
+    import MainAlgo
     print
     'Smoke testing ...'
     graphs = {'karate': nx.generators.karate_club_graph(),
@@ -105,11 +105,11 @@ def smoke_test():
         print
         name
         # print '  nn=%d,ne=%d'%(G.number_of_nodes(), G.number_of_edges())
-        replica = algorithms.generate_graph(original=G, params=params)
+        replica = MainAlgo.generate_graph(original=G, params=params)
         # print '  nn=%d,ne=%d'%(replica.number_of_nodes(), replica.number_of_edges())
         assert G.selfloop_edges() == []
 
-    assert 0 == os.system(graphutils.MUSKETEER_EXAMPLE_CMD)
+    assert 0 == os.system(UtilityAlloc.MUSKETEER_EXAMPLE_CMD)
 
     print
     'Smoke test: PASSED'

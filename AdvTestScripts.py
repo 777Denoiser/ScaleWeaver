@@ -16,9 +16,9 @@ import joblib
 Parallel = joblib.Parallel
 delayed = joblib.delayed
 
-import algorithms
-import graphutils
-import simpletesters
+import MainAlgo
+import UtilityAlloc
+import TestScripts
 
 np.seterr(all='raise')
 

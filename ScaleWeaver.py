@@ -19,9 +19,9 @@ import re
 import pdb
 import cPickle
 import algorithms
-import graphutils
-import simpletesters
-import alternatives
+import UtilityAlloc
+import TestScripts
+import AltAlgo
 try:
     import new_algs #for testing
 except:
@@ -31,6 +31,7 @@ np.seterr(all='raise')
 timeNow = lambda : time.strftime('%Y_%m_%d__%H_%M_%S', time.localtime())
 
 version = '2015-04'
+
 
 def initialize():
     try:
