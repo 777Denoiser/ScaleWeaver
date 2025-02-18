@@ -218,16 +218,16 @@ def show_usage():
     print('-w, --write_graph Write replica to disc (Default: -w True).')
     print('                  For interactive Python make False to speed up generation (disables visualization).')
     print()
-    print('For reading graphs with -t, the supported graph types are: \n%s' % graphutils.load_graph(path=None,
+    print('For reading graphs with -t, the supported graph types are: \n%s' % UtilityAlloc.load_graph(path=None,
                                                                                                     list_types_and_exit=True))
     print()
-    print('For writing graphs with -o, the supported graph extensions are: \n%s' % graphutils.write_graph(G=None,
+    print('For writing graphs with -o, the supported graph extensions are: \n%s' % UtilityAlloc.write_graph(G=None,
                                                                                                           path=None,
                                                                                                           list_types_and_exit=True))
     print()
     print()
     print('Example call format:')
-    print(graphutils.MUSKETEER_EXAMPLE_CMD)
+    print(UtilityAlloc.MUSKETEER_EXAMPLE_CMD)
 
 
 if __name__ == '__main__':
@@ -242,14 +242,14 @@ if __name__ == '__main__':
 
     if verbose:
         print('Loading: %s' % input_path)
-    G = graphutils.load_graph(path=input_path, params={'graph_type':graph_type, 'verbose':verbose})
+    G = UtilityAlloc.load_graph(path=input_path, params={'graph_type':graph_type, 'verbose':verbose})
 
     if verbose:
         print('Generating ...')
     new_G = algorithms.generate_graph(G, params=params)
 
     #another feature that can be switched on (optional)
-    #print graphutils.graph_graph_delta(G=G, new_G=new_G)
+    #print UtilityAlloc.graph_graph_delta(G=G, new_G=new_G)
     #new_G = nx.convert_node_labels_to_integers(new_G, 1, 'default', True)
 
     #TODO: too many reports
@@ -264,7 +264,7 @@ if __name__ == '__main__':
         model_Gs.reverse()
         Gs.      reverse()
         for model_G, new_graph in zip(model_Gs, Gs):
-            graphutils.compare_nets(model_G, new_graph, params={'verbose':True, 'normalize':True})
+            UtilityAlloc.compare_nets(model_G, new_graph, params={'verbose':True, 'normalize':True})
 
     new_G = params.get('post_processor', lambda G,original,params:G)(G=new_G, original=G, params=params)
 
@@ -286,7 +286,7 @@ if __name__ == '__main__':
         if verbose:
             print('Saving graph: %s' % output_path)
         sys.stdout.flush()
-        graphutils.write_graph(new_G, output_path)
+        UtilityAlloc.write_graph(new_G, output_path)
     image_path  = output_path + '.pdf'
     stderr_path = output_path + '.err.txt'
 
@@ -294,7 +294,7 @@ if __name__ == '__main__':
         if verbose:
             print('Generator Report')
         sys.stdout.flush()
-        graphutils.compare_nets(G, new_G, params=params)
+        UtilityAlloc.compare_nets(G, new_G, params=params)
 
     #0.03 is too small for Linux
     #sfdp_default_cmd = 'sfdp -Goverlap="prism100" -Goverlap_scaling=-100 -Nlabel="" -Nwidth=0.01 -Nfixedsize=true -Nheight=0.01'
@@ -325,12 +325,12 @@ if __name__ == '__main__':
         retCode = os.system(visualizer_cmdl)
 
         replica_name = new_G.name
-        new_G = graphutils.color_by_3d_distances(nx.read_dot(tmp_path), verbose)
+        new_G = UtilityAlloc.color_by_3d_distances(nx.read_dot(tmp_path), verbose)
         new_G.name = replica_name
         if verbose:
             print('Saving graph with updated layout and color: %s' % output_path)
         sys.stdout.flush()
-        graphutils.write_graph(new_G, output_path)
+        UtilityAlloc.write_graph(new_G, output_path)
 
         visualizer_cmdl = sfdp_default_cmd +' -Tpdf %s > %s 2> %s '%(output_path,image_path,stderr_path)
         if verbose:
@@ -358,6 +358,6 @@ if __name__ == '__main__':
         if verbose:
             print(visualizer_cmdl)
 
-    graphutils.safe_pickle(path=output_path+'.pkl', data=new_G, params=params)
+    UtilityAlloc.safe_pickle(path=output_path+'.pkl', data=new_G, params=params)
     if verbose:
         print('Replica is referenced by variable: new_G')

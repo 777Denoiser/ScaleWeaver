@@ -114,8 +114,8 @@ def coarsening_test2(seed=None):
     npr.seed(seed)
     random.seed(seed)
 
-    G = graphutils.load_graph('data/mesh33.gml')
-    # G = graphutils.load_graph('data-engineering/watts_strogatz98_power.elist')
+    G = UtilityAlloc.load_graph('data/mesh33.gml')
+    # G = UtilityAlloc.load_graph('data-engineering/watts_strogatz98_power.elist')
     c_tree = []
 
     def store_aggregation_chain(G, G_coarse, c_data):
@@ -155,7 +155,7 @@ def coarsening_test2(seed=None):
 
     gpath = 'output/coarsening_test_' + timeNow() + '.dot'
     gpath_fig = gpath + '.pdf'
-    graphutils.write_graph(G=G, path=gpath)
+    UtilityAlloc.write_graph(G=G, path=gpath)
     print
     'Writing graph image: %s ..' % gpath_fig
     visualizer_cmdl = 'sfdp -Nwidth=0.10 -Nheight=0.10 -Nfixedsize=true -Nstyle=filled -Tpdf %s > %s &' % (
@@ -167,7 +167,7 @@ def coarsening_test2(seed=None):
 
 
 def drake_hougardy_test():
-    import new_algs, graphutils
+    import new_algs, UtilityAlloc
 
     matching_weight = lambda G, mat: sum(G.edge[u][mat[u]].get('weight', 1.0) for u in mat) / 2.0
 
@@ -188,12 +188,12 @@ def drake_hougardy_test():
     path = nx.path_graph(11)
     for u, v, d in path.edges(data=True):
         d['weight'] = max(u, v) ** 2
-    matching = graphutils.drake_hougardy_slow(path)
+    matching = UtilityAlloc.drake_hougardy_slow(path)
     print(
     'Matching slow: ' + str(matching))
     print
     '      wt: ' + str(matching_weight(path, matching))
-    matching = graphutils.drake_hougardy(path)
+    matching = UtilityAlloc.drake_hougardy(path)
     assert is_matching(matching)
     assert is_maximal(path, matching)
     print
@@ -206,13 +206,13 @@ def drake_hougardy_test():
     print
     '      wt: ' + str(matching_weight(path, path_opt_m))
 
-    Gr2 = graphutils.load_graph('data-cyber-small/gr2.gml')
-    matching = graphutils.drake_hougardy_slow(Gr2)
+    Gr2 = UtilityAlloc.load_graph('data-cyber-small/gr2.gml')
+    matching = UtilityAlloc.drake_hougardy_slow(Gr2)
     print
     'Matching slow: ' + str(matching)
     print
     '      wt: ' + str(matching_weight(Gr2, matching))
-    matching = graphutils.drake_hougardy(Gr2)
+    matching = UtilityAlloc.drake_hougardy(Gr2)
     assert is_matching(matching)
     assert is_maximal(Gr2, matching)
     print
@@ -225,7 +225,7 @@ def drake_hougardy_test():
     print
     '      wt: ' + str(matching_weight(Gr2, gr2_opt_m))
 
-    # matching = graphutils.drake_hougardy(nx.erdos_renyi_graph(1000, 0.02))
+    # matching = UtilityAlloc.drake_hougardy(nx.erdos_renyi_graph(1000, 0.02))
     num_test_graphs = 100
     num_nodes = 400
     edge_density = 0.02
@@ -235,7 +235,7 @@ def drake_hougardy_test():
         Gnp = nx.erdos_renyi_graph(num_nodes, edge_density, seed=seed)
         print
         'Seed: %d' % seed
-        matching = graphutils.drake_hougardy(Gnp)
+        matching = UtilityAlloc.drake_hougardy(Gnp)
         assert is_matching(matching)
         assert is_maximal(Gnp, matching)
         wtDH = matching_weight(Gnp, matching)
@@ -321,7 +321,7 @@ def evaluate_metrics(graphs, metrics, n_jobs=-1):
 def evaluate_similarity(base_graphs, graphs, sim_metrics=None, n_jobs=-1):
     # evaluate a set of metrics on a set of graphs.  typically the first graph is the original graph
     if sim_metrics == None:
-        sim_metrics = [{'name': 'jacc_edges', 'function': graphutils.graph_graph_delta}]
+        sim_metrics = [{'name': 'jacc_edges', 'function': UtilityAlloc.graph_graph_delta}]
         # TODO: this might be too slow b/c all changes are listed
     if (type(base_graphs) is not list) and (type(base_graphs) is not tuple):
         base_graphs = [base_graphs] * len(graphs)
@@ -438,18 +438,18 @@ def plot_deviation(vals_of_replicas, vals_of_graph, metrics, figpath, jaccard_ed
         nor_vals = []
         if multiple_models:
             assert len(vals_of_graph[met_num]) == len(vals_of_replicas[met_num])
-            pruned_model_vals = [v for v in vals_of_graph[met_num] if v != graphutils.METRIC_ERROR]
+            pruned_model_vals = [v for v in vals_of_graph[met_num] if v != UtilityAlloc.METRIC_ERROR]
             if len(pruned_model_vals) > 0:
                 v_graph = np.average(pruned_model_vals)
             else:
-                v_graph = graphutils.METRIC_ERROR
+                v_graph = UtilityAlloc.METRIC_ERROR
         else:
             v_graph = vals_of_graph[met_num]
 
         v_reps = vals_of_replicas[met_num]
-        if v_graph != graphutils.METRIC_ERROR:
+        if v_graph != UtilityAlloc.METRIC_ERROR:
             if v_graph != 0.0:
-                nor_vals = [float(v) / v_graph for v in v_reps if v != graphutils.METRIC_ERROR]
+                nor_vals = [float(v) / v_graph for v in v_reps if v != UtilityAlloc.METRIC_ERROR]
             else:
                 if v_reps != [] and np.abs(v_reps).sum() == 0.:
                     nor_vals.append(len(v_reps) * [1.0])
@@ -463,7 +463,7 @@ def plot_deviation(vals_of_replicas, vals_of_graph, metrics, figpath, jaccard_ed
             normed_replica_vals.append(nor_vals)
             if len(nor_vals) > 0:
                 pylab.boxplot(nor_vals, positions=[met_num], vert=0, widths=0.5)
-                if (nor_vals == graphutils.METRIC_ERROR).any():
+                if (nor_vals == UtilityAlloc.METRIC_ERROR).any():
                     val_str = r'undefined'
                     avg_norm = -np.inf
                 elif np.abs(nor_vals).sum() < 1000:
@@ -519,13 +519,13 @@ def plot_deviation(vals_of_replicas, vals_of_graph, metrics, figpath, jaccard_ed
     mean_relstd_errors = []
     for met_i in xrange(num_of_metrics):
         normed_vals = normed_replica_vals[met_i]
-        if graphutils.METRIC_ERROR in normed_vals or len(normed_vals) == 1:
+        if UtilityAlloc.METRIC_ERROR in normed_vals or len(normed_vals) == 1:
             mean_rel_errors.append(None)
             mean_relstd_errors.append(None)
             continue
         rel_error_ar = [v - 1.0 for v in normed_vals if v != None]
         if len(rel_error_ar) == 0:
-            rel_error_ar = [graphutils.METRIC_ERROR, graphutils.METRIC_ERROR]
+            rel_error_ar = [UtilityAlloc.METRIC_ERROR, UtilityAlloc.METRIC_ERROR]
         mean_rel_errors.append(np.average(rel_error_ar))
         mean_relstd_errors.append(np.average(rel_error_ar) / (1E-20 + np.std(rel_error_ar)))
 
@@ -576,10 +576,10 @@ def replica_vs_original(seed=None, figpath=None, generator_func=None, G=None, pa
         generator_func = algorithms.generate_graph
 
     if G == None:
-        G = graphutils.load_graph(path='data-social/potterat_Hiv250.elist')
-
+        G = UtilityAlloc.load_graph(path='data-social/potterat_Hiv250.elist')
+ 
     if metrics == None:
-        metrics = graphutils.default_metrics[:]
+        metrics = UtilityAlloc.default_metrics[:]
     metrics = filter(lambda m: m['optional'] < 2, metrics)
     if 'metric_runningtime_bound' in params:
         mrtb = params['metric_runningtime_bound']
@@ -621,7 +621,7 @@ def safe_metrics(graph, metrics):
             'error in computing: ' + metric['name'])
             print(
             inst)
-            rets.append(graphutils.METRIC_ERROR)
+            rets.append(UtilityAlloc.METRIC_ERROR)
     return rets
 
 
@@ -635,7 +635,7 @@ def safe_similarity(graph, new_graph, metrics):
             'error in computing: ' + metric['name'])
             print(
             inst)
-            rets.append(graphutils.METRIC_ERROR)
+            rets.append(UtilityAlloc.METRIC_ERROR)
     return rets
 
 
@@ -760,7 +760,7 @@ def statistical_tests(seed=8):
                       }
     # params_default['algorithm'] = algorithms.musketeer_on_subgraphs
 
-    metrics_default = graphutils.default_metrics[:]
+    metrics_default = UtilityAlloc.default_metrics[:]
     # some metrics are removed because of long running time
     metrics_default = filter(
         lambda met: met['name'] not in ['avg flow closeness', 'avg eigvec centrality', 'degree connectivity',
@@ -781,7 +781,7 @@ def statistical_tests(seed=8):
         num_replicas = problem.get('num_replicas', default_num_replicas)
 
         if type(graph_data) is str:
-            base_graph = graphutils.load_graph(path=graph_data)
+            base_graph = UtilityAlloc.load_graph(path=graph_data)
             base_graph.name = os.path.split(graph_data)[1]
         else:
             base_graph = graph_data
@@ -790,7 +790,7 @@ def statistical_tests(seed=8):
 
         gpath = 'output/' + os.path.split(base_graph.name)[1] + '_' + timeNow() + '.dot'
         gpath_fig = gpath[:-3] + 'eps'
-        graphutils.write_graph(G=base_graph, path=gpath)
+        UtilityAlloc.write_graph(G=base_graph, path=gpath)
         visualizer_cmdl = 'sfdp  -Nlabel="" -Nwidth=0.03 -Nfixedsize=true -Nheight=0.03 -Teps %s > %s &' % (
         gpath, gpath_fig)
         print
@@ -809,5 +809,5 @@ if __name__ == '__main__':
     # edge_attachment_test(seed=None)
     # print 'Statistical tests: this would take time ...'
     # statistical_tests()
-    replica_vs_original(G=graphutils.load_graph('data-samples/mesh33.edges'), params={'edge_edit_rate': [0.01, 0.01]},
+    replica_vs_original(G=UtilityAlloc.load_graph('data-samples/mesh33.edges'), params={'edge_edit_rate': [0.01, 0.01]},
                         num_replicas=2, n_jobs=1)

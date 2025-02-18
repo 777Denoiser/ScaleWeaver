@@ -392,7 +392,7 @@ def color_by_3d_distances(G, verbose):
 
 def color_new_nodes_and_edges(G, original, params=None):
 #add red color to new components.
-#use the option 'post_processor':graphutils.color_new_nodes_and_edges
+#use the option 'post_processor':UtilityAlloc.color_new_nodes_and_edges
     for node in G:
         G.node[node]['label'] = ''
         #d['style'] = 'filled'
@@ -641,7 +641,7 @@ def graph_graph_delta(G, new_G, **kwargs):
 def graph_sanity_test(G, params=None):
     ok = True
     if G.number_of_nodes() == 0:
-        print 'Warning: no nodes'
+        print('Warning: no nodes')
         ok = False
     elif G.has_node(None):
         print('Node with label "None" is in the graph.')
@@ -735,54 +735,56 @@ def load_graph(path, params={}, list_types_and_exit=False):
     skip_sanity= params.get('skip_sanity', False)
 
     if not os.path.exists(path):
-        raise ValueError, 'Path does not exist: %s'%path
+        raise ValueError('Path does not exist: %s' % path)
 
     if graph_type in loaders:
         if graph_type in ['edges', 'elist', 'edgelist']:
-            print "Default weight is 1. To indicate weight, each line should use the format: node1 node2 {'weight':positive_wt}"
+            print(
+                "Default weight is 1. To indicate weight, each line should use the format: node1 node2 {'weight':positive_wt}")
         if graph_type in ['adjlist']:
-            print 'Adjlist format: WARNING! assuming that the lines are: "u neighbor1 neighbor2 etc".  Implicit "u" is not allowed'
+            print(
+                'Adjlist format: WARNING! assuming that the lines are: "u neighbor1 neighbor2 etc".  Implicit "u" is not allowed')
         try:
             G = loaders[graph_type](path=path, **read_params)
             if not sane_graph(G) and not skip_sanity:
-                print 'Warning: Sanity test failed!'
+                print('Warning: Sanity test failed!')
                 print
                 graph_type = None
         except:
-            print 'Graph read error.'
+            print('Graph read error.')
             raise
 
     if G == None and graph_type != 'AUTODETECT':
-        raise Exception,'Unable to load graphs of type '+str(graph_type)
+        raise Exception('Unable to load graphs of type ' + str(graph_type))
 
     extension_guess = os.path.splitext(path)[1][1:]
     if G == None and extension_guess in known_extensions:
-        print 'Attempting auto-detection of graph type.'
+        print('Attempting auto-detection of graph type.')
 
         if params.get('verbose', True):
-            print 'Warning: Trying to auto-detect graph type by extension'
+            print('Warning: Trying to auto-detect graph type by extension')
         graph_type = known_extensions[extension_guess]
         if params.get('verbose', True):
-            print 'Guessing type: '+str(graph_type)
+            print('Guessing type: ' + str(graph_type))
         try:
             G = loaders[graph_type](path=path)
             assert sane_graph(G) or skip_sanity
-        except Exception, inst:
-            print 'Graph read error.  This might be caused by malformed edge data or unicode errors.'
-            print inst
+        except Exception as inst:
+            print('Graph read error.  This might be caused by malformed edge data or unicode errors.')
+            print(inst)
 
     if G == None and graph_type in raw_loaders:
         if params.get('verbose', True):
-            print 'Trying raw read...'
+            print('Trying raw read...')
         try:
             f = open(path, 'rb')
             lines = f.readlines()
             G = raw_loaders[graph_type](lines=lines)
             del lines
             assert sane_graph(G) or skip_sanity
-        except Exception, inst:
-            print 'Graph read error:'
-            print inst
+        except Exception as inst:
+            print('Graph read error:')
+            print(inst)
         finally:
             try:
                 f.close()
@@ -791,7 +793,7 @@ def load_graph(path, params={}, list_types_and_exit=False):
 
     if G == None:
         if params.get('verbose', True):
-            print 'Warning: Trying to guess graph type iteratively: this often FAILS'
+            print('Warning: Trying to guess graph type iteratively: this often FAILS')
         for graph_type in loaders:
             try:
                 if params.get('verbose', True):
@@ -800,7 +802,7 @@ def load_graph(path, params={}, list_types_and_exit=False):
                 if sane_graph(G) or skip_sanity:
                     if params.get('verbose', True):
                         print(' Yes!')
-                        print 'Successfully detected type: '+str(graph_type)
+                        print('Successfully detected type: ' + str(graph_type))
                     break
                 else:
                     if params.get('verbose', True):
@@ -812,7 +814,7 @@ def load_graph(path, params={}, list_types_and_exit=False):
                     print(' No.')
 
     if G == None:
-        raise Exception, 'Could not load graph.  None of the available loaders succeeded.'
+        raise Exception('Could not load graph.  None of the available loaders succeeded.')
 
     #postprocessing
     if graph_type == 'dot':
@@ -845,7 +847,7 @@ def powerlaw_mle(G, xmin=6.):
     #print np.array(degseq).transpose()
 
     if xmin < 6:
-        print 'Warning: the estimator uses an approximation which is not suitable for xmin < 6'
+        print('Warning: the estimator uses an approximation which is not suitable for xmin < 6')
 
     degseqLn = [np.log(xi/(xmin-0.5)) for xi in degseq if xi >= xmin]
     degseqLn.sort() #to reduce underflow.
@@ -980,16 +982,17 @@ def read_adjlist_implicit_prefix(path, comments = '#', create_using=None):
                 else:
                     G.add_edges_from([(node_num,int(v)) for v in line.split(' ')])
                 node_num += 1
-    except Exception,inst:
+    except Exception as inst:
         if 'node_num' not in locals():
             raise
-        raise IOError, 'Parse error on line %d'%(node_num+1)
+        raise IOError('Parse error on line %d' % (node_num + 1))
 
     expected_num_nodes = int(header_data[0])
     expected_num_edges = int(header_data[1])
 
     if G.number_of_nodes() != expected_num_nodes or G.number_of_edges() != expected_num_edges:
-        raise IOError, 'Failed integrity check to input. Expected nn=%d,ne=%d; Read nn=%d,ne=%d'%(expected_num_nodes,expected_num_edges,G.number_of_nodes(),G.number_of_edges())
+        raise IOError('Failed integrity check to input. Expected nn=%d,ne=%d; Read nn=%d,ne=%d' % (
+        expected_num_nodes, expected_num_edges, G.number_of_nodes(), G.number_of_edges()))
 
     return G
 
@@ -997,15 +1000,15 @@ def safe_pickle(path, data, params=None):
     with open(path, 'wb') as f:
         cPickle.dump(data, f)
         if type(params) != type({}) or params.get('verbose', True):
-            print 'pickled to: '+str(path)
+            print('pickled to: ' + str(path))
 
 
 def test_algebraic_distance():
     #TODO: need new tests: edges are always=1 for normal distance
     #given two start vectors, a mesh should unfold
-    print 'Testing Algebraic distance'
+    print('Testing Algebraic distance')
     #test1: nodes nearby on the path graph should land nearby
-    print 'test path ...'
+    print('test path ...')
     G1 = nx.path_graph(10)
     distance1 = algebraic_distance(G1, params={'all_pairs_distance':False})  #usual regime
     true_distance1 = []
@@ -1019,11 +1022,11 @@ def test_algebraic_distance():
 
     assert distance1[0][1] == distance1[1][0]
     val1 = np.corrcoef(true_distance1, alg_distance1)[0,1]
-    print 'correlation: %.2f'%val1
+    print('correlation: %.2f' % val1)
     assert val1 > 0.8
-    print 'passed.'
+    print('passed.')
 
-    print 'test grid'
+    print('test grid')
     G2=nx.grid_graph(dim=[10,10])
     distance2 = algebraic_distance(G2, params={'all_pairs_distance':True})
     true_distance2 = []
@@ -1036,7 +1039,7 @@ def test_algebraic_distance():
             alg_distance2.append(distance2[node1][node2])
 
     val2 = np.corrcoef(true_distance2, alg_distance2)[0,1]
-    print 'correlation: %.2f'%val2
+    print('correlation: %.2f' % val2)
     assert val2 > 0.5
 
     val1 = np.corrcoef(true_distance1, alg_distance1)[0,1]
@@ -1049,13 +1052,14 @@ def test_algebraic_distance():
                 continue
             err2 += abs(distance2sp[node1][node2] - distance2[node1][node2])
     err2 = err2/G.number_of_edges()
-    print '  mean gap for pair: %.f'%(err2)
+    print('  mean gap for pair: %.f' % (err2))
     assert err2 < 0.1
 
-    print 'passed.'
+    print('passed.')
+
 
 def test_average_path_length():
-    print 'Testing avg path length estimator'
+    print('Testing avg path length estimator')
     G = nx.barabasi_albert_graph(300, 5)
     #G = nx.cycle_graph(300)
 
@@ -1064,14 +1068,15 @@ def test_average_path_length():
     true_lengths = nx.all_pairs_shortest_path_length(G)
     true_avg = np.average([np.average(true_lengths[node].values()) for node in G])
 
-    print 'Estimate: %f'%estimated_avg
-    print 'True:     %f'%true_avg
+    print('Estimate: %f' % estimated_avg)
+    print('True:     %f' % true_avg)
 
     assert abs(estimated_avg-true_avg)/true_avg < 0.03
-    print 'PASSED'
+    print('PASSED')
+
 
 def test_bfs():
-    print 'Testing BFS'
+    print('Testing BFS')
     G = nx.path_graph(5)
     distances_path0 = bfs_distance_with_horizon(G, source=0, horizon=2)
     assert distances_path0[0] == 0
@@ -1096,49 +1101,52 @@ def test_bfs():
             if node2 in horizon_d_node1:
                 assert true_d[node1][node2] == horizon_d_node1[node2]
             assert true_d[node1][node2] == horizon_dinf_node1[node2]
-    print 'PASSED'
+    print('PASSED')
 
     s='''
     import networkx as nx
-    import graphutils
+    import UtilityAlloc
     #G = nx.grid_2d_graph(10, 10)
     G = nx.erdos_renyi_graph(200, 0.2)
-    #graphutils.bfs_distance_with_horizon(G, source=(1,5), horizon=10)
-    graphutils.bfs_distance_with_horizon(G, source=15, horizon=10)
+    #UtilityAlloc.bfs_distance_with_horizon(G, source=(1,5), horizon=10)
+    UtilityAlloc.bfs_distance_with_horizon(G, source=15, horizon=10)
     '''
     import timeit
     t=timeit.Timer(stmt=s)
     num_trials = 100
-    print '%f usec/pass'%(t.timeit(number=num_trials)/num_trials)
+    print('%f usec/pass' % (t.timeit(number=num_trials) / num_trials))
+
 
 def test_graphtool_distance():
     G = nx.connected_watts_strogatz_graph(n=2000, k=4, p=0.02, tries=100, seed=None)
-    print 'NX: %.3f'%average_all_pairs_shortest_path(G)
-    print 'GT: %.3f'%average_all_pairs_shortest_path_GT(G)
-    print 'NX sampling: %.3f'%average_all_pairs_shortest_path_estimate(G)
-    print 'GT sampling: %.3f'%average_all_pairs_shortest_path_estimate_GT(G)
+    print('NX: %.3f' % average_all_pairs_shortest_path(G))
+    print('GT: %.3f' % average_all_pairs_shortest_path_GT(G))
+    print('NX sampling: %.3f' % average_all_pairs_shortest_path_estimate(G))
+    print('GT sampling: %.3f' % average_all_pairs_shortest_path_estimate_GT(G))
+
 
 def test_inverse_mean_path_length():
-    print 'Testing BFS'
+    print('Testing BFS')
     G = nx.erdos_renyi_graph(100, 0.02)
     eff_est = average_all_pairs_inverse_shortest_path_estimate(G, max_num_sources=100)
-    print 'Estimate: '+str(eff_est)
+    print('Estimate: ' + str(eff_est))
     eff_tru = average_all_pairs_inverse_shortest_path_estimate(G, max_num_sources=G.number_of_nodes())
-    print 'True:     '+str(eff_tru)
+    print('True:     ' + str(eff_tru))
     assert abs(eff_est-eff_tru)/eff_tru < 0.05
-    print 'PASSED'
+    print('PASSED')
+
 
 def test_powerlaw_mle():
-    print 'Testing Power law MLE estimator'
+    print('Testing Power law MLE estimator')
     G = nx.barabasi_albert_graph(100, 5)
-    print 'nn: %d, alpha: %f'%(G.number_of_nodes(),powerlaw_mle(G))
+    print('nn: %d, alpha: %f' % (G.number_of_nodes(), powerlaw_mle(G)))
     G = nx.barabasi_albert_graph(1000, 5)
-    print 'nn: %d, alpha: %f'%(G.number_of_nodes(),powerlaw_mle(G))
+    print('nn: %d, alpha: %f' % (G.number_of_nodes(), powerlaw_mle(G)))
     G = nx.barabasi_albert_graph(10000, 5)
-    print 'nn: %d, alpha: %f'%(G.number_of_nodes(),powerlaw_mle(G))
+    print('nn: %d, alpha: %f' % (G.number_of_nodes(), powerlaw_mle(G)))
     G = nx.barabasi_albert_graph(100000, 5)
-    print 'nn: %d, alpha: %f'%(G.number_of_nodes(),powerlaw_mle(G))
-    print 'Expected: 2.9 (or thereabout)'
+    print('nn: %d, alpha: %f' % (G.number_of_nodes(), powerlaw_mle(G)))
+    print('Expected: 2.9 (or thereabout)')
 
 
 def write_dot_helper(G, path, encoding='utf-8'):

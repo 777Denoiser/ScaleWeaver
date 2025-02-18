@@ -797,7 +797,7 @@ def generate_graph(original, params=None):
     G = original.copy()
     if params.get('verbose', True):
         sys.stdout.write('Checking original graph ... ')
-        graphutils.graph_sanity_test(G, params)
+        UtilityAlloc.graph_sanity_test(G, params)
         sys.stdout.write('Done.'+os.linesep)
     start_time = time.time()
 
@@ -815,7 +815,7 @@ def generate_graph(original, params=None):
     replica.name = getattr(original, 'name', 'graph') + '_replica_' + timeNow()
     replica._musketeer_data = original._musketeer_data #WARNING shallow copy, to allow information to be passed from G to replicas
 
-    graphutils.graph_sanity_test(replica, params)
+    UtilityAlloc.graph_sanity_test(replica, params)
 
     del G
     gc.collect()
@@ -1126,7 +1126,7 @@ def seed_finder_matching(G, params):
 
     #all the matching algorithms return a dictionary u->v and v->u
     #matching_algorithm  = params.get('matching_algorithm', nx.max_weight_matching)
-    matching_algorithm  = params.get('matching_algorithm', graphutils.drake_hougardy)
+    matching_algorithm  = params.get('matching_algorithm', UtilityAlloc.drake_hougardy)
 
     matching = matching_algorithm(G)
     for nodeA in matching:
