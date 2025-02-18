@@ -1,4 +1,4 @@
-# ScaleWeaver: A high-fidelity artificial Network of Networks (NoN) generator
+# ScaleWeaver: A High-Fidelity Artificial Network of Networks (NoN) Generator
 
 ## Setup and Installation:
 
@@ -6,7 +6,7 @@
 
 Ensure your system meets the following requirements:
 
-1. Python >=2.7, 3.8 or above
+1. Python >=2.7, 3.2 or above
 2. NetworkX library (version >= 1.10)
 3. NumPy library (version >= 1.5)
 
