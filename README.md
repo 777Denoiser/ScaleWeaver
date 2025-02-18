@@ -6,7 +6,7 @@
 
 Ensure your system meets the following requirements:
 
-1. Python >=2.7, 3.2 or above
+1. Python >=2.8, 3.2 or above
 2. NetworkX library (version >= 1.10)
 3. NumPy library (version >= 1.5)
 
@@ -27,18 +27,15 @@ For visualization purposes, it is recommended to install Graphviz.
 
 Citations:
 [1] https://realpython.com/generative-adversarial-networks/
-[2] https://www.vde.com/en/fnn/topics/european-network-codes/rfg
-[3] https://www.v7labs.com/blog/neural-network-architectures-guide
-[4] https://goemc.com/wp-content/uploads/2020/10/NEC-Requirements-for-Generators.pdf
-[5] https://neptune.ai/blog/6-gan-architectures
-[6] https://www.acer.europa.eu/electricity/connection-codes/requirements-for-generators
-[7] https://openaccess.thecvf.com/content_CVPR_2019/papers/Karras_A_Style-Based_Generator_Architecture_for_Generative_Adversarial_Networks_CVPR_2019_paper.pdf
-[8] https://www.entsoe.eu/network_codes/rfg/
+[2] https://www.v7labs.com/blog/neural-network-architectures-guide
+[3] https://neptune.ai/blog/6-gan-architectures
+[4] https://www.acer.europa.eu/electricity/connection-codes/requirements-for-generators
+[5] https://www.entsoe.eu/network_codes/rfg/
 
 ## Usage Example:
 
 ```python
-python musketeer.py -f data-samples/arenas_email.edges -t edgelist -p "{'node_growth_rate':[0.005, 0.001], 'edge_edit_rate':[0.05, 0.04, 0.03], 'node_edit_rate':[0.07, 0.06, 0.05]}" -o output/test.dot
+python ScaleWeaver.py -f data-samples/Nest8W.edges -t edgelist -p "{'node_growth_rate':[0.005, 0.001], 'edge_edit_rate':[0.05, 0.04, 0.03], 'node_edit_rate':[0.07, 0.06, 0.05]}" -o output/test.dot
 ```
 
 1. Loads data
@@ -48,14 +45,14 @@ python musketeer.py -f data-samples/arenas_email.edges -t edgelist -p "{'node_gr
 
 Direct Python call:
 ```python
-import algorithms
-new_G = algorithms.generate_graph(G, params)
+import ScaleWeaver
+new_G = ScaleWeaver.generate_graph(G, params)
 ```
 
 ## Key Parameters:
 
 - `node_growth_rate`, `edge_growth_rate`: Values in (-1,infinity)
-- `algorithm`: Alternative generators (e.g., `alternatives.expected_degree_replicate`)
+- `ScaleWeaver`: Alternative generators (e.g., `AltAlgo.expected_degree_replicate`)
 - `accept_chance_edges`: Controls long-distance edge insertion (0.0-1.0)
 - `deferential_detachment_factor`: Modifies edge deletion probability (default: 1)
 - `locality_bias_correction`: Adjusts triangle generation (-1 to 1)
@@ -64,15 +61,15 @@ new_G = algorithms.generate_graph(G, params)
 
 ## Advanced Options:
 
-- `algorithm:algorithms.musketeer_snapshots`: Sequential editing with snapshots
-- `algorithm:algorithms.musketeer_iterated_cycles`: Alternating editing cycles
-- `algorithm:algorithms.musketeer_on_subgraphs`: Apply to each component separately
+- `MainAlgo:MainAlgo.ScaleWeaver_snapshots`: Sequential editing with snapshots
+- `MainAlgo:MainAlgo.ScaleWeaver_iterated_cycles`: Alternating editing cycles
+- `MainAlgo:MainAlgo.ScaleWeaver_on_subgraphs`: Apply to each component separately
 - `post_processor`: Custom function for final processing
 
 Troubleshooting:
 ---------------
 Accelerating the computation
-* remove the computation of the metrics with "-M False" argument (all metrics);  or in graphutils.py, make some complex metrics optional.
+* remove the computation of the metrics with "-M False" argument (all metrics);  or in UtilAlloc.py, make some complex metrics optional.
 * convert the original graph into a simple format like edgelist
 * reduce the new_edge_horizon (reduces fidelity)
 * set deferential_detachment_factor close to 0 (reduces fidelity)
