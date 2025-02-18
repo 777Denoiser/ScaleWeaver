@@ -566,10 +566,10 @@ def test_Kpart():
 def __main():
     """Main function to mimic C++ version behavior"""
     try:
-        import graphutils
+        import UtilityAlloc
         filename = sys.argv[1]
         # graph = __load_binary(filename)
-        graph = graphutils.load_graph(path=filename)
+        graph = UtilityAlloc.load_graph(path=filename)
         partition = best_partition(graph)
         print >> sys.stderr, str(modularity(partition, graph))
         for elem, part in partition.iteritems():

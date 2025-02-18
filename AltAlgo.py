@@ -163,12 +163,12 @@ def test1():
     kron = kronecker_replicate(original=nx.path_graph(10), params={'num_iterations': 4})
 
     import simpletesters
-    assert graphutils.graph_santity_test(ws)
-    assert graphutils.graph_santity_test(liu_chung)
-    assert graphutils.graph_santity_test(er)
-    assert graphutils.graph_santity_test(rand_noise1)
-    assert graphutils.graph_santity_test(rand_noise2)
-    assert graphutils.graph_santity_test(kron)
+    assert UtilityAlloc.graph_santity_test(ws)
+    assert UtilityAlloc.graph_santity_test(liu_chung)
+    assert UtilityAlloc.graph_santity_test(er)
+    assert UtilityAlloc.graph_santity_test(rand_noise1)
+    assert UtilityAlloc.graph_santity_test(rand_noise2)
+    assert UtilityAlloc.graph_santity_test(kron)
 
     print
     'Test 1 passed!'
