@@ -201,8 +201,7 @@ def compute_topology_data(G, level, params):
                 num_nodes_beyond_the_horizon += num_misses
     try:
         locality_bias_correction = params['locality_bias_correction'][level]
-    except:
-        locality_bias_correction = 0.
+    except: locality_bias_correction = 0.
     #locality_bias_correction = 0
 
     if locality_bias_correction > 0: #shift weight downward b/c this estimator under-rates correlations between neighbors

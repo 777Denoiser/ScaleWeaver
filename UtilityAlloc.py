@@ -15,46 +15,63 @@ import CommDir
 
 np.seterr(all='raise')
 
-timeNow = lambda : time.strftime('%Y_%m_%d__%H_%M_%S', time.localtime())
+timeNow = lambda: time.strftime('%Y_%m_%d__%H_%M_%S', time.localtime())
 
 MUSKETEER_EXAMPLE_CMD = 'python musketeer.py -p "{\'edge_edit_rate\':[0.1,0.01]}" -f data-samples/karate.adjlist -t adjlist -o output/karate_replica.edges'
 
 None_node = None  #key to indicate a not real node.
 
+
 #those are short methods (like lambda, but supporting pickling)
 def a_avg_degree(G):
     return np.average(nx.degree(G).values())
+
+
 def a_degree_connectivity(G):
     return np.average(nx.average_degree_connectivity(G).values())
+
+
 def a_s_metric(G):
     return nx.s_metric(G, normalized=False)
+
+
 def a_eccentricity(G):
     return np.average(nx.eccentricity(G).values())
+
+
 def a_avg_shortest(G):
     return average_all_pairs_shortest_path_estimate(G, max_num_sources=100)
+
+
 def a_avg_harmonic(G):
     return average_all_pairs_inverse_shortest_path_estimate(G, max_num_sources=100)
+
+
 def a_avg_between(G):
     return np.average(nx.betweenness_centrality(G, normalized=True).values())
 
+
 METRIC_ERROR = -999999
+
+
 #any negative value is suitable, but not None or -np.inf (might complicate code for statistical analysis)
 
 def average_all_pairs_shortest_path(G):
-    if nx.number_connected_components(G)>1:
+    if nx.number_connected_components(G) > 1:
         return METRIC_ERROR
     true_d = nx.all_pairs_shortest_path_length(G)
     nx_sum = 0.0
     reachable_pairs = 0.0
     for key1 in true_d:
-      for key2 in true_d[key1]:
-        nx_sum += true_d[key1][key2]
-        reachable_pairs += 1.0
-    nx_mean_distance = nx_sum/reachable_pairs
+        for key2 in true_d[key1]:
+            nx_sum += true_d[key1][key2]
+            reachable_pairs += 1.0
+    nx_mean_distance = nx_sum / reachable_pairs
     return nx_mean_distance
 
+
 def average_all_pairs_shortest_path_GT(G):
-    if nx.number_connected_components(G)>1:
+    if nx.number_connected_components(G) > 1:
         return METRIC_ERROR
 
     import graph_tool, graph_tool.topology
@@ -70,8 +87,9 @@ def average_all_pairs_shortest_path_GT(G):
 
     return gt_mean_distance
 
+
 def average_all_pairs_shortest_path_estimate(G, max_num_sources=100):
-    if nx.number_connected_components(G)>1:
+    if nx.number_connected_components(G) > 1:
         return METRIC_ERROR
 
     num_sources = min(G.number_of_nodes(), max_num_sources)
@@ -91,8 +109,9 @@ def average_all_pairs_shortest_path_estimate(G, max_num_sources=100):
     total_distance /= num_sources
     return total_distance
 
+
 def average_all_pairs_shortest_path_estimate_GT(G, max_num_sources=100):
-    if nx.number_connected_components(G)>1:
+    if nx.number_connected_components(G) > 1:
         return METRIC_ERROR
 
     import graph_tool, graph_tool.topology
@@ -100,16 +119,17 @@ def average_all_pairs_shortest_path_estimate_GT(G, max_num_sources=100):
     num_sources = min(G.number_of_nodes(), max_num_sources)
     cum_distance = 0.0
     for source in random.sample(G.nodes(), num_sources):
-        gt_source     = gtG['G'].vertex(gtG['node_to_num'][source])
-        gtDistances   = graph_tool.topology.shortest_distance(g=gtG['G'], source=gt_source, target=None, dense=False)
+        gt_source = gtG['G'].vertex(gtG['node_to_num'][source])
+        gtDistances = graph_tool.topology.shortest_distance(g=gtG['G'], source=gt_source, target=None, dense=False)
         cum_distance += np.average(gtDistances.a)
     cum_distance /= num_sources
     return cum_distance
 
+
 def average_all_pairs_inverse_shortest_path_estimate(G, max_num_sources=100):
-#estimates the ''efficiency'' of the graph: the harmonic mean of the distances
-#this is well-defined even in disconnected graphs
-    if G.number_of_edges()<1:
+    #estimates the ''efficiency'' of the graph: the harmonic mean of the distances
+    #this is well-defined even in disconnected graphs
+    if G.number_of_edges() < 1:
         return METRIC_ERROR
 
     num_sources = min(G.number_of_nodes(), max_num_sources)
@@ -125,34 +145,37 @@ def average_all_pairs_inverse_shortest_path_estimate(G, max_num_sources=100):
     tally = 0.0
     for source in sampled_sources:
         lengths = nx.single_source_shortest_path_length(G, source)
-        tally += sum([1.0/lengths[node] for node in lengths if node!=source])
-    tally = num_sources*(1.0/tally)
+        tally += sum([1.0 / lengths[node] for node in lengths if node != source])
+    tally = num_sources * (1.0 / tally)
     return tally
 
+
 def average_flow_closeness(G):
-  if nx.number_connected_components(G)>1:
-    return METRIC_ERROR
-  else:
-    length=nx.algorithms.current_flow_closeness_centrality(G)
-    sum = 0.0
-    count = 0.0
-    for key1 in length.keys():
-      sum = sum + length[key1]
-      count = count + 1
-    return sum/count
+    if nx.number_connected_components(G) > 1:
+        return METRIC_ERROR
+    else:
+        length = nx.algorithms.current_flow_closeness_centrality(G)
+        sum = 0.0
+        count = 0.0
+        for key1 in length.keys():
+            sum = sum + length[key1]
+            count = count + 1
+        return sum / count
+
 
 def average_eigenvector_centrality(G):
-  #warning: this algorithm might not be suitable for disconnected graphs, since it creates additional zero eigenvalues
-  if nx.number_connected_components(G)>1:
-    return METRIC_ERROR
-  else:
-    length=nx.algorithms.eigenvector_centrality(G, 500, 0.0001)
-    sum = 0.0
-    count = 0.0
-    for key1 in length.keys():
-      sum = sum + length[key1]
-      count = count + 1
-    return sum/count
+    #warning: this algorithm might not be suitable for disconnected graphs, since it creates additional zero eigenvalues
+    if nx.number_connected_components(G) > 1:
+        return METRIC_ERROR
+    else:
+        length = nx.algorithms.eigenvector_centrality(G, 500, 0.0001)
+        sum = 0.0
+        count = 0.0
+        for key1 in length.keys():
+            sum = sum + length[key1]
+            count = count + 1
+        return sum / count
+
 
 def algebraic_distance_dense(G, params={}):
     '''
@@ -167,10 +190,10 @@ def algebraic_distance_dense(G, params={}):
             DORIT RON, ILYA SAFRO, AND ACHI BRANDT
     '''
 
-    metric              = params.get('metric', 'Linfinity')
-    num_relaxations_r   = params.get('num_relaxations_r', 10)
-    num_test_vectors_K  = params.get('num_test_vectors_K', 20)
-    lazy_walk_param_w   = params.get('lazy_walk_param_w', 0.3)
+    metric = params.get('metric', 'Linfinity')
+    num_relaxations_r = params.get('num_relaxations_r', 10)
+    num_test_vectors_K = params.get('num_test_vectors_K', 20)
+    lazy_walk_param_w = params.get('lazy_walk_param_w', 0.3)
 
     if metric != 'Linfinity':
         raise Exception('Metric other than Linifinity not implemented')
@@ -190,8 +213,8 @@ def algebraic_distance_dense(G, params={}):
     for node1 in all_nodes:
         distance[node1] = {}
         for node2 in H.neighbors(node1):
-            if node1 < node2: #save time
-               distance[node1][node2] = -np.inf
+            if node1 < node2:  #save time
+                distance[node1][node2] = -np.inf
 
     #wishlist: sparse matrices
     #the wrong laplacian (uses degrees) LAP      = nx.laplacian_matrix(H)
@@ -203,32 +226,32 @@ def algebraic_distance_dense(G, params={}):
         if val == 0.:
             val == 1.
         diag_vec.append(val)
-    diag_vec     = np.array(diag_vec)
-    diag_vec_inv = 1./diag_vec  #[1./val for val in diag_vec]
-    DIAG     = np.diag(diag_vec)
-    DIAGinv  = np.diag(diag_vec_inv)
-    ADJ      = nx.adj_matrix(G, nodelist=all_nodes)
-    w_times_Dinv_times_LAP = lazy_walk_param_w * np.dot(DIAGinv,DIAG-ADJ)
+    diag_vec = np.array(diag_vec)
+    diag_vec_inv = 1. / diag_vec  #[1./val for val in diag_vec]
+    DIAG = np.diag(diag_vec)
+    DIAGinv = np.diag(diag_vec_inv)
+    ADJ = nx.adj_matrix(G, nodelist=all_nodes)
+    w_times_Dinv_times_LAP = lazy_walk_param_w * np.dot(DIAGinv, DIAG - ADJ)
 
     for t in xrange(num_test_vectors_K):
-        x = npr.rand(H.number_of_nodes(),1) - 0.5
+        x = npr.rand(H.number_of_nodes(), 1) - 0.5
         x = x / x.sum()
 
         for iteration in xrange(num_relaxations_r):
-            x = (1-lazy_walk_param_w)*x + np.dot(w_times_Dinv_times_LAP, x)
+            x = (1 - lazy_walk_param_w) * x + np.dot(w_times_Dinv_times_LAP, x)
 
         #maximize over the trial vectors: d(i,j) = max_{t=1..K} |x_t(i) - x_t(j)|
         for node1 in all_nodes:
             for node2 in H.neighbors(node1):
-                dis = np.abs((x[node1]-x[node2])[0,0])
-                if node1 < node2 and dis > distance[node1][node2]: #to save time, compute just the upper triangle of the matrix
+                dis = np.abs((x[node1] - x[node2])[0, 0])
+                if node1 < node2 and dis > distance[node1][
+                    node2]:  #to save time, compute just the upper triangle of the matrix
                     distance[node1][node2] = dis
-
 
     #generate the distance dictionary in the original node labels, and including the diagonal and lower triangle
     ret = {}
     for node1 in G:
-        ret[node1] = {node1:0.}
+        ret[node1] = {node1: 0.}
     for u in H:
         node1 = H.node[u]['orig_label']
         ret[node1] = {}
@@ -258,18 +281,19 @@ def algebraic_distance_sparse(G, params={}):
             DORIT RON, ILYA SAFRO, AND ACHI BRANDT
     '''
 
-    metric              = params.get('metric', 'Linfinity')
-    num_relaxations_r   = params.get('num_relaxations_r', 10)
-    num_test_vectors_K  = params.get('num_test_vectors_K', 50)
-    lazy_walk_param_w   = params.get('lazy_walk_param_w', 0.5)
+    metric = params.get('metric', 'Linfinity')
+    num_relaxations_r = params.get('num_relaxations_r', 10)
+    num_test_vectors_K = params.get('num_test_vectors_K', 50)
+    lazy_walk_param_w = params.get('lazy_walk_param_w', 0.5)
 
-    singletons = filter(lambda u: G.degree(u)==0, G.nodes())
+    singletons = filter(lambda u: G.degree(u) == 0, G.nodes())
     if len(singletons) == 0:
         Gcopy = G
     else:
         Gcopy = G.copy()
         Gcopy.remove_nodes_from(singlestons)
-    H = nx.convert_node_labels_to_integers(Gcopy, label_attribute='orig_label')  #this does preserve node and edge weights
+    H = nx.convert_node_labels_to_integers(Gcopy,
+                                           label_attribute='orig_label')  #this does preserve node and edge weights
 
     if metric != 'Linfinity':
         raise Exception('Metric other than Linifinity is not implemented')
@@ -278,46 +302,45 @@ def algebraic_distance_sparse(G, params={}):
     for node1 in H:
         distance[node1] = {}
         for node2 in H:
-            if node1 < node2: #save time
-               distance[node1][node2] = -np.inf
+            if node1 < node2:  #save time
+                distance[node1][node2] = -np.inf
 
     nn = H.number_of_nodes()
     #wishlist: sparse matrices
     ##LAP      = nx.laplacian_matrix(H)
     #diag_vec = [H.node['weight'] for node in H]
     #diag_vec     = np.array([H.node[u].get('weight', 1) for u in H])  #should consider degree?
-    diag_vec     = np.array([H.degree(u) for u in H])
-    diag_vec_inv = 1./diag_vec  #[1./val for val in diag_vec]
+    diag_vec = np.array([H.degree(u) for u in H])
+    diag_vec_inv = 1. / diag_vec  #[1./val for val in diag_vec]
     full_range = range(nn)
-    DIAG     = scipy.sparse.csr_matrix((diag_vec,     (full_range,full_range)))
-    DIAGinv  = scipy.sparse.csr_matrix((diag_vec_inv, (full_range,full_range)))
-    ADJ      = nx.to_scipy_sparse_matrix(G, nodelist=non_singletons, format='csr')
+    DIAG = scipy.sparse.csr_matrix((diag_vec, (full_range, full_range)))
+    DIAGinv = scipy.sparse.csr_matrix((diag_vec_inv, (full_range, full_range)))
+    ADJ = nx.to_scipy_sparse_matrix(G, nodelist=non_singletons, format='csr')
     #w_times_Dinv_times_LAP = lazy_walk_param_w * np.dot(np.diag([1./el for el in diag_vec]),DIAG-LAP)
-    w_times_Dinv_times_LAP = lazy_walk_param_w * DIAGinv.dot(DIAG-ADJ)
+    w_times_Dinv_times_LAP = lazy_walk_param_w * DIAGinv.dot(DIAG - ADJ)
 
     for t in xrange(num_test_vectors_K):
-        x = npr.rand(H.number_of_nodes(),1)
+        x = npr.rand(H.number_of_nodes(), 1)
 
         for iteration in xrange(num_relaxations_r):
-            x = (1-lazy_walk_param_w)*x + w_times_Dinv_times_LAP.dot(x)
+            x = (1 - lazy_walk_param_w) * x + w_times_Dinv_times_LAP.dot(x)
 
         #maximize over the trial vectors: d(i,j) = max_{t=1..K} |x_t(i) - x_t(j)|
         for node1 in H:
             for node2 in (H if all_pairs_distance else H.neighbors(node1)):
-                dis = np.abs((x[node1]-x[node2])[0,0])
+                dis = np.abs((x[node1] - x[node2])[0, 0])
                 if node1 < node2:
                     old_dis = distance[node1][node2]
-                    if dis > old_dis: #to save time, compute just the upper triangle of the matrix
+                    if dis > old_dis:  #to save time, compute just the upper triangle of the matrix
                         distance[node1][node2] = dis
-
 
     #generate the distance dictionary in the original node labels, and including the diagonal and lower triangle
     ret = {}
     for node1 in G:
-        ret[node1] = {node1:0.} #important for singletons
+        ret[node1] = {node1: 0.}  #important for singletons
     for u in H:
         node1 = H.node[u]['orig_label']
-        ret[node1] = {node1:0.}
+        ret[node1] = {node1: 0.}
         for v in (H if all_pairs_distance else H.neighbors(u)):
             node2 = H.node[v]['orig_label']
             if u < v:
@@ -329,22 +352,26 @@ def algebraic_distance_sparse(G, params={}):
             ret[node1][node2] = d
             ret[node2][node1] = d
     return ret
+
+
 algebraic_distance = algebraic_distance_dense
+
+
 #algebraic_distance = algebraic_distance_sparse
 
 def bfs_distance_with_horizon(G, source, horizon=4, blocked_node=None):
-#computes distance from every node to every neighbor at distance at most <horizon> hops
-#    nodes further away are considered infinitely away
-#no path is allowed through blocked_node
+    #computes distance from every node to every neighbor at distance at most <horizon> hops
+    #    nodes further away are considered infinitely away
+    #no path is allowed through blocked_node
     G_adj = G.adj
     G_neighbors = lambda u: G_adj[u].keys()
 
     fringe = set(G_neighbors(source))
-    distance_source  = {source:0}
-    for d in xrange(1, horizon+1):
+    distance_source = {source: 0}
+    for d in xrange(1, horizon + 1):
         new_fringe = []
         for v in fringe:
-            if v not in distance_source and v!=blocked_node:
+            if v not in distance_source and v != blocked_node:
                 distance_source[v] = d
                 new_fringe += G_neighbors(v)
         fringe = set(new_fringe)
@@ -356,57 +383,60 @@ def color_by_3d_distances(G, verbose):
     import matplotlib.pylab as pylab
     #cm=pylab.get_cmap('Paired')
     #cm=pylab.get_cmap('gist_rainbow')
-    cm=pylab.get_cmap('RdBu')  #UFL
+    cm = pylab.get_cmap('RdBu')  #UFL
 
     if verbose:
         print('Computing edge colors ...')
     max_dis = 0
     positions = {}
-    for u,v,data in G.edges_iter(data=True):
+    for u, v, data in G.edges_iter(data=True):
         try:
             u_pos = positions[u]
         except:
             #u_pos = np.array([float(p) for p in G.node[u]['pos'][1:-1].split(',')])
             u_pos = np.array([float(p) for p in G.node[u]['pos'].split(',')])
             positions[u] = u_pos
+            raise
         try:
             v_pos = positions[v]
         except:
             #v_pos = np.array([float(p) for p in G.node[v]['pos'][1:-1].split(',')])
             v_pos = np.array([float(p) for p in G.node[v]['pos'].split(',')])
             positions[v] = v_pos
+            raise
 
-        dis = np.sqrt(np.sum(np.power(u_pos-v_pos,2)))
+        dis = np.sqrt(np.sum(np.power(u_pos - v_pos, 2)))
         max_dis = max(max_dis, dis)
 
         data['dis'] = dis
 
-    for u,v,data in G.edges_iter(data=True):
+    for u, v, data in G.edges_iter(data=True):
         dis = data.pop('dis')
         #data['color'] = '"%.3f %.3f %.3f"'%tuple(cm(dis/max_dis)[:3])
-        data['color'] = '%.3f %.3f %.3f'%tuple(cm(dis/max_dis)[:3])
+        data['color'] = '%.3f %.3f %.3f' % tuple(cm(dis / max_dis)[:3])
         #data['weight'] = 1.0
 
     return G
 
 
 def color_new_nodes_and_edges(G, original, params=None):
-#add red color to new components.
-#use the option 'post_processor':UtilityAlloc.color_new_nodes_and_edges
+    #add red color to new components.
+    #use the option 'post_processor':UtilityAlloc.color_new_nodes_and_edges
     for node in G:
         G.node[node]['label'] = ''
         #d['style'] = 'filled'
         if node in original:
-            G.node[node]['color']='black'
+            G.node[node]['color'] = 'black'
         else:
-            G.node[node]['color']='blue'
-    for u,v,d in G.edges_iter(data=True):
-        if original.has_edge(u,v):
-            d['color']='black'
+            G.node[node]['color'] = 'blue'
+    for u, v, d in G.edges_iter(data=True):
+        if original.has_edge(u, v):
+            d['color'] = 'black'
         else:
-            d['color']='blue'
+            d['color'] = 'blue'
 
     return G
+
 
 def compare_nets(old_G, new_G, metrics=None, params={}):
     '''
@@ -414,10 +444,10 @@ def compare_nets(old_G, new_G, metrics=None, params={}):
     '''
     if metrics == None:
         metrics = default_metrics
-    verbose   = params.get('verbose', True)
-    runningtime_bound   = params.get('metric_runningtime_bound', 2)
+    verbose = params.get('verbose', True)
+    runningtime_bound = params.get('metric_runningtime_bound', 2)
 
-    precision   = params.get('reporting_precision', 2)
+    precision = params.get('reporting_precision', 2)
     #formatstring = '\t%.'+str(precision)+'f\t%.'+str(precision)+'f\t%.'+str(precision)+'f%%'
 
     #TODO: at the moment, graph_graph_delta cannot find edges which were deleted then inserted back: it changes the edge attribute data
@@ -428,9 +458,9 @@ def compare_nets(old_G, new_G, metrics=None, params={}):
         num_changed_edges = len(delta['new_edges']) + len(delta['del_edges'])
         if old_G.number_of_nodes() > 0:
             print('New or deleted Nodes: %d (%.1f%%)' % (
-            num_changed_nodes, 100 * float(num_changed_nodes) / old_G.number_of_nodes()))
+                num_changed_nodes, 100 * float(num_changed_nodes) / old_G.number_of_nodes()))
             print('New or deleted Edges: %d (%.1f%%)' % (
-            num_changed_edges, 100 * float(num_changed_edges) / old_G.number_of_edges()))
+                num_changed_edges, 100 * float(num_changed_edges) / old_G.number_of_edges()))
             print
         print('Name\t\t\tOld G\t\tNew G\t\tRelative Error')
         print('statistics start ------------------------------------------------------------')
@@ -446,36 +476,38 @@ def compare_nets(old_G, new_G, metrics=None, params={}):
                 sys.stdout.flush()
             old_value = met_func(old_G)
             new_value = met_func(new_G)
-            if old_value != 0. and abs(old_value-METRIC_ERROR) > 1 and abs(new_value-METRIC_ERROR) > 1:
-                error = met_wt*float(new_value-old_value)/old_value
+            if old_value != 0. and abs(old_value - METRIC_ERROR) > 1 and abs(new_value - METRIC_ERROR) > 1:
+                error = met_wt * float(new_value - old_value) / old_value
             else:
                 error = np.NaN
             if verbose:
                 outstr = ''
                 if np.abs(old_value) < 0.1 or np.abs(old_value) > 1000:
-                    outstr += ('\t%.'+str(precision)+'e')%old_value
+                    outstr += ('\t%.' + str(precision) + 'e') % old_value
                 else:
-                    outstr += ('\t%.'+str(precision)+'f    ')%old_value
+                    outstr += ('\t%.' + str(precision) + 'f    ') % old_value
                 if np.abs(new_value) < 0.1 or np.abs(new_value) > 1000:
-                    outstr += ('\t%.'+str(precision)+'e')%new_value
+                    outstr += ('\t%.' + str(precision) + 'e') % new_value
                 else:
-                    outstr += ('\t%.'+str(precision)+'f    ')%new_value
-                outstr += ('\t%.'+str(precision)+'f%%')%(100*error)
+                    outstr += ('\t%.' + str(precision) + 'f    ') % new_value
+                outstr += ('\t%.' + str(precision) + 'f%%') % (100 * error)
                 print(outstr)
                 #print formatstring%(old_value,new_value,100*error)
             errors[met_name] = (old_value, new_value, error)
         except Exception as inst:
             print()
             print('Warning: could not compute ' + met_name + ': ' + str(inst))
-    mean_error = np.average([np.abs(v[2]) for v in errors.values() if (v[2]!=np.NaN) and abs(v[2]-METRIC_ERROR) > 1])
+    mean_error = np.average(
+        [np.abs(v[2]) for v in errors.values() if (v[2] != np.NaN) and abs(v[2] - METRIC_ERROR) > 1])
     if verbose:
         print('statistics end ------------------------------------------------------------')
         print('Mean absolute difference: %.2f%%' % (100 * mean_error))
 
     return mean_error, errors
 
+
 def degree_assortativity(G):
-#this wrapper helps avoid error due to change in interface name
+    #this wrapper helps avoid error due to change in interface name
     if hasattr(nx, 'degree_assortativity_coefficient'):
         return nx.degree_assortativity_coefficient(G)
     elif hasattr(nx, 'degree_assortativity'):
@@ -483,24 +515,24 @@ def degree_assortativity(G):
     else:
         raise ValueError('Cannot compute degree assortativity: method not available')
 
+
 def drake_hougardy_slow(G):
-#uses an implementation close to the pseudo-code in a stackoverflow paper
+    #uses an implementation close to the pseudo-code in a stackoverflow paper
     assert not G.is_directed()
     H = nx.Graph()
-    for u,v,d in G.edges(data=True):
-        H.add_edge(u,v,d)
+    for u, v, d in G.edges(data=True):
+        H.add_edge(u, v, d)
     #H = G.copy() #deep
     H_adj = H.adj
-    H_degree    = lambda u: H_adj[u].__len__()
-    H_outedges  = lambda u: H.edge[u]
+    H_degree = lambda u: H_adj[u].__len__()
+    H_outedges = lambda u: H.edge[u]
 
-
-    Matchings = ([],[])
-    Weights   = [0.,0.]
+    Matchings = ([], [])
+    Weights = [0., 0.]
     ind = 0
     #edges           = set(G.edges())
     #inspected_nodes = dict.from_keys(G.nodes(), False)
-    ni             = G.nodes_iter()  #use G, not H
+    ni = G.nodes_iter()  #use G, not H
     #qx = ni.next()
 
     while H.number_of_edges() > 0:
@@ -510,17 +542,18 @@ def drake_hougardy_slow(G):
             break
         while x in H and H_degree(x) > 0:
             nbs = H_outedges(x)
-            nb_weights = [(nb,nbs[nb].get('weight', 1.0)) for nb in nbs]
-            y,wt_y = max(nb_weights, key=lambda x:x[1])
-            Matchings[ind].append((x,y))
+            nb_weights = [(nb, nbs[nb].get('weight', 1.0)) for nb in nbs]
+            y, wt_y = max(nb_weights, key=lambda x: x[1])
+            Matchings[ind].append((x, y))
             Weights[ind] += wt_y
             H.remove_node(x)
             x = y
-            ind = (ind + 1)%2
+            ind = (ind + 1) % 2
     if Weights[0] > Weights[1]:
-        return dict(Matchings[0] + [(y,x) for (x,y) in Matchings[0]])
+        return dict(Matchings[0] + [(y, x) for (x, y) in Matchings[0]])
     else:
-        return dict(Matchings[1] + [(y,x) for (x,y) in Matchings[1]])
+        return dict(Matchings[1] + [(y, x) for (x, y) in Matchings[1]])
+
 
 def drake_hougardy(G, maximize=True):
     '''Compute a weighted matching of G using the Drake-Hougardy path growing algorithm.[1]
@@ -547,43 +580,42 @@ def drake_hougardy(G, maximize=True):
     '''
     assert not G.is_directed()
     G_adj = G.adj
-    G_outedges  = lambda u: G.edge[u]
+    G_outedges = lambda u: G.edge[u]
     mx = max
 
-    Matchings = ([],[])
-    Weights   = [0.,0.]
-    ind       = 0
-    ni        = G.nodes_iter()  #use G, not G
+    Matchings = ([], [])
+    Weights = [0., 0.]
+    ind = 0
+    ni = G.nodes_iter()  #use G, not G
     inspected = set()  #iff u in inspected, it has been already included in the matching.
     num_inspected_halfedges = 0
     num_edges = G.number_of_edges()
 
     nodes = G.nodes()
     try:
-        npr.shuffle(nodes)    #wishlist: why does it fail on npr.shuffle([u'903', 1]) ??
+        npr.shuffle(nodes)  #wishlist: why does it fail on npr.shuffle([u'903', 1]) ??
     except:
         random.shuffle(nodes)  #wishlist: might be too slow...
     for x in nodes:
-        if num_inspected_halfedges >= 2*num_edges:
+        if num_inspected_halfedges >= 2 * num_edges:
             break
         while x not in inspected:
             inspected.add(x)
             nbs = G_outedges(x)
             num_inspected_halfedges += nbs.__len__()
-            nb_weights = [(nb,nbs[nb].get('weight', 1.0)) for nb in nbs if nb not in inspected]
+            nb_weights = [(nb, nbs[nb].get('weight', 1.0)) for nb in nbs if nb not in inspected]
             if nb_weights.__len__() == 0:
                 continue
-            y,wt_y = mx(nb_weights, key=lambda pair:pair[1])
-            Matchings[ind].append((x,y))
+            y, wt_y = mx(nb_weights, key=lambda pair: pair[1])
+            Matchings[ind].append((x, y))
             Weights[ind] += wt_y
             x = y
-            ind = (ind + 1)%2
-
+            ind = (ind + 1) % 2
 
     if Weights[0] > Weights[1]:
-        best_matching = dict(Matchings[0] + [(y,x) for (x,y) in Matchings[0]])
+        best_matching = dict(Matchings[0] + [(y, x) for (x, y) in Matchings[0]])
     else:
-        best_matching = dict(Matchings[1] + [(y,x) for (x,y) in Matchings[1]])
+        best_matching = dict(Matchings[1] + [(y, x) for (x, y) in Matchings[1]])
 
     if not maximize:
         return best_matching
@@ -592,16 +624,17 @@ def drake_hougardy(G, maximize=True):
         if x in best_matching:
             continue
         nbs = G_outedges(x)
-        nb_weights = [(nb,nbs[nb].get('weight', 1.0)) for nb in nbs if nb not in best_matching]
+        nb_weights = [(nb, nbs[nb].get('weight', 1.0)) for nb in nbs if nb not in best_matching]
         if nb_weights.__len__() == 0:
             continue
-        y,wt_y = mx(nb_weights, key=lambda pair:pair[1])
+        y, wt_y = mx(nb_weights, key=lambda pair: pair[1])
         best_matching[x] = y
         best_matching[y] = x
     return best_matching
 
+
 def graph_graph_delta(G, new_G, **kwargs):
-#lists the changes in the two graphs, and reports the Jaccard similarity coefficient for nodes and for edges
+    #lists the changes in the two graphs, and reports the Jaccard similarity coefficient for nodes and for edges
     new_nodes = []
     del_nodes = []
     new_edges = []
@@ -621,22 +654,23 @@ def graph_graph_delta(G, new_G, **kwargs):
         if not G.has_edge(*edge):
             new_edges.append(edge)
 
-    ret = {'new_nodes':new_nodes, 'del_nodes':del_nodes, 'new_edges':new_edges, 'del_edges':del_edges}
+    ret = {'new_nodes': new_nodes, 'del_nodes': del_nodes, 'new_edges': new_edges, 'del_edges': del_edges}
 
     num_nodes_original = G.number_of_nodes()
     num_edges_original = G.number_of_edges()
     if num_nodes_original + len(new_nodes) > 0:
-        jaccard_nodes = float(num_nodes_original-len(del_nodes))/(num_nodes_original + len(new_nodes))
+        jaccard_nodes = float(num_nodes_original - len(del_nodes)) / (num_nodes_original + len(new_nodes))
     else:
         jaccard_nodes = 0.
     if num_edges_original + len(new_edges) > 0:
-        jaccard_edges = float(num_edges_original-len(del_edges))/(num_edges_original + len(new_edges))
+        jaccard_edges = float(num_edges_original - len(del_edges)) / (num_edges_original + len(new_edges))
     else:
         jaccard_edges = 0.
     ret['jaccard_nodes'] = jaccard_nodes
     ret['jaccard_edges'] = jaccard_edges
 
     return ret
+
 
 def graph_sanity_test(G, params=None):
     ok = True
@@ -670,55 +704,55 @@ def load_graph(path, params={}, list_types_and_exit=False):
     '''
 
     loaders = {
-            'adjlist':nx.read_adjlist,
-            'adjlist_implicit':read_adjlist_implicit,
-            'adjlist_implicit_prefix':read_adjlist_implicit_prefix,
-            'graph6':nx.read_graph6,
-            'shp':nx.read_shp,
-            'dot':nx.drawing.nx_agraph.read_dot,
-            'xdot':nx.drawing.nx_agraph.read_dot,
-            'sparse6':nx.read_sparse6,
-            'edges':nx.read_edgelist,
-            'elist':nx.read_edgelist,
-            'edgelist':nx.read_edgelist,
-            'graphml':nx.read_graphml,
-            'gexf':nx.read_gexf,
-            'leda':nx.read_leda,
-            'weighted_edgelist':nx.read_weighted_edgelist,
-            'gml':nx.read_gml,
-            'multiline_adjlist':nx.read_multiline_adjlist,
-            'yaml':nx.read_yaml,
-            'gpickle':nx.read_gpickle,
-            'pajek':nx.read_pajek,}
+        'adjlist': nx.read_adjlist,
+        'adjlist_implicit': read_adjlist_implicit,
+        'adjlist_implicit_prefix': read_adjlist_implicit_prefix,
+        'graph6': nx.read_graph6,
+        'shp': nx.read_shp,
+        'dot': nx.drawing.nx_agraph.read_dot,
+        'xdot': nx.drawing.nx_agraph.read_dot,
+        'sparse6': nx.read_sparse6,
+        'edges': nx.read_edgelist,
+        'elist': nx.read_edgelist,
+        'edgelist': nx.read_edgelist,
+        'graphml': nx.read_graphml,
+        'gexf': nx.read_gexf,
+        'leda': nx.read_leda,
+        'weighted_edgelist': nx.read_weighted_edgelist,
+        'gml': nx.read_gml,
+        'multiline_adjlist': nx.read_multiline_adjlist,
+        'yaml': nx.read_yaml,
+        'gpickle': nx.read_gpickle,
+        'pajek': nx.read_pajek, }
 
     raw_loaders = {
-            'adjlist':nx.parse_adjlist,
-            'elist':nx.parse_edgelist,
-            'edgelist':nx.parse_edgelist,
-            'gml':nx.parse_gml,
-            'leda':nx.parse_leda,
-            'multiline_adjlist':nx.parse_multiline_adjlist,
-            'pajek':nx.parse_pajek,
-            }
+        'adjlist': nx.parse_adjlist,
+        'elist': nx.parse_edgelist,
+        'edgelist': nx.parse_edgelist,
+        'gml': nx.parse_gml,
+        'leda': nx.parse_leda,
+        'multiline_adjlist': nx.parse_multiline_adjlist,
+        'pajek': nx.parse_pajek,
+    }
 
     known_extensions = {
-            'gml':'gml',
-            'dot':'dot',
-            'xdot':'dot',
-            'edges':'edgelist',
-            'elist':'edgelist',
-            'edgelist':'edgelist',
-            'welist':'weighted_edgelist',
-            'wdgelist':'weighted_edgelist',
-            'weighted_edgelist':'weighted_edgelist',
-            'adj':'adjlist',
-            'alist':'adjlist',
-            'adjlist':'adjlist',
-            'adjlistImp':'adjlist_implicit',
-            'adjlistImpPre':'adjlist_implicit_prefix',
-            'pajek':'pajek',
-            'net':'pajek',
-            }
+        'gml': 'gml',
+        'dot': 'dot',
+        'xdot': 'dot',
+        'edges': 'edgelist',
+        'elist': 'edgelist',
+        'edgelist': 'edgelist',
+        'welist': 'weighted_edgelist',
+        'wdgelist': 'weighted_edgelist',
+        'weighted_edgelist': 'weighted_edgelist',
+        'adj': 'adjlist',
+        'alist': 'adjlist',
+        'adjlist': 'adjlist',
+        'adjlistImp': 'adjlist_implicit',
+        'adjlistImpPre': 'adjlist_implicit_prefix',
+        'pajek': 'pajek',
+        'net': 'pajek',
+    }
 
     if list_types_and_exit:
         return loaders.keys()
@@ -731,8 +765,8 @@ def load_graph(path, params={}, list_types_and_exit=False):
 
     G = None
     graph_type = params.get('graph_type', 'AUTODETECT')
-    read_params= params.get('read_params', {})
-    skip_sanity= params.get('skip_sanity', False)
+    read_params = params.get('read_params', {})
+    skip_sanity = params.get('skip_sanity', False)
 
     if not os.path.exists(path):
         raise ValueError('Path does not exist: %s' % path)
@@ -823,20 +857,22 @@ def load_graph(path, params={}, list_types_and_exit=False):
         if not hasattr(G, 'name') or G.name == '':
             G.name = os.path.split(path)[1]
     except:
-        pass
+        raise
 
     return G
 
+
 def make_gt_graph(nxG):
     import graph_tool, graph_tool.topology
-    node_to_num  = dict(zip(nxG.nodes(), range(nxG.number_of_nodes())))
-    gtG          = graph_tool.Graph(directed=nxG.is_directed())
+    node_to_num = dict(zip(nxG.nodes(), range(nxG.number_of_nodes())))
+    gtG = graph_tool.Graph(directed=nxG.is_directed())
     edge_weights = gtG.new_edge_property("double")
     gtG.add_vertex(nxG.number_of_nodes())
-    for u,v,data in nxG.edges(data=True):
+    for u, v, data in nxG.edges(data=True):
         e = gtG.add_edge(node_to_num[u], node_to_num[v])
         edge_weights[e] = data.get('weight', 1.0)
-    return {'G':gtG, 'edge_weights':edge_weights, 'node_to_num':node_to_num}
+    return {'G': gtG, 'edge_weights': edge_weights, 'node_to_num': node_to_num}
+
 
 def powerlaw_mle(G, xmin=6.):
     #estimate the power law exponent based on Clauset et al., http://arxiv.org/abs/0706.1062,
@@ -849,16 +885,15 @@ def powerlaw_mle(G, xmin=6.):
     if xmin < 6:
         print('Warning: the estimator uses an approximation which is not suitable for xmin < 6')
 
-    degseqLn = [np.log(xi/(xmin-0.5)) for xi in degseq if xi >= xmin]
-    degseqLn.sort() #to reduce underflow.
+    degseqLn = [np.log(xi / (xmin - 0.5)) for xi in degseq if xi >= xmin]
+    degseqLn.sort()  #to reduce underflow.
 
     #print degseqLn
     return 1. + len(degseqLn) / sum(degseqLn)
 
 
-
-def read_adjlist_implicit(path, comments = '#', delimiter = None,
-                  create_using = None, nodetype = int):
+def read_adjlist_implicit(path, comments='#', delimiter=None,
+                          create_using=None, nodetype=int):
     """Parse lines of a graph adjacency list representation.
 
     Parameters
@@ -905,47 +940,49 @@ def read_adjlist_implicit(path, comments = '#', delimiter = None,
 
     """
     if create_using is None:
-        G=nx.Graph()
+        G = nx.Graph()
     else:
         try:
-            G=create_using
+            G = create_using
             G.clear()
         except:
             raise TypeError("Input graph is not a NetworkX graph type")
+            raise
 
     with open(path, 'r') as file:
         lines = file.readlines()
 
     linenum = 1
     for line in lines:
-        p=line.find(comments)
-        if p>=0:
+        p = line.find(comments)
+        if p >= 0:
             line = line[:p]
         if not len(line):
             continue
-        vlist=line.strip().split(delimiter)
+        vlist = line.strip().split(delimiter)
         #u=vlist.pop(0)
         # convert types
         u = linenum
         if nodetype is not None:
             try:
-                u=nodetype(linenum)
+                u = nodetype(linenum)
             except:
-                raise TypeError("Failed to convert node (%s) to type %s"\
-                                %(u,nodetype))
+                raise TypeError("Failed to convert node (%s) to type %s" \
+                                % (u, nodetype))
+                raise
         G.add_node(u)
         if nodetype is not None:
             try:
-                vlist=map(nodetype,vlist)
+                vlist = map(nodetype, vlist)
             except:
-                raise TypeError("Failed to convert nodes (%s) to type %s"\
-                                    %(','.join(vlist),nodetype))
+                raise TypeError("Failed to convert nodes (%s) to type %s" \
+                                % (','.join(vlist), nodetype))
         G.add_edges_from([(u, v) for v in vlist])
         linenum += 1
     return G
 
 
-def read_adjlist_implicit_prefix(path, comments = '#', create_using=None):
+def read_adjlist_implicit_prefix(path, comments='#', create_using=None):
     '''
     reads network files formatted as:
 
@@ -971,8 +1008,8 @@ def read_adjlist_implicit_prefix(path, comments = '#', create_using=None):
             header_data = file_handle.next().split(' ')
             node_num = 1
             for line in file_handle:
-                p=line.find(comments)
-                if p>=0:
+                p = line.find(comments)
+                if p >= 0:
                     line = line[:p]
                 if not len(line):
                     continue
@@ -980,7 +1017,7 @@ def read_adjlist_implicit_prefix(path, comments = '#', create_using=None):
                 if line == '':
                     G.add_node(node_num)
                 else:
-                    G.add_edges_from([(node_num,int(v)) for v in line.split(' ')])
+                    G.add_edges_from([(node_num, int(v)) for v in line.split(' ')])
                 node_num += 1
     except Exception as inst:
         if 'node_num' not in locals():
@@ -992,9 +1029,10 @@ def read_adjlist_implicit_prefix(path, comments = '#', create_using=None):
 
     if G.number_of_nodes() != expected_num_nodes or G.number_of_edges() != expected_num_edges:
         raise IOError('Failed integrity check to input. Expected nn=%d,ne=%d; Read nn=%d,ne=%d' % (
-        expected_num_nodes, expected_num_edges, G.number_of_nodes(), G.number_of_edges()))
+            expected_num_nodes, expected_num_edges, G.number_of_nodes(), G.number_of_edges()))
 
     return G
+
 
 def safe_pickle(path, data, params=None):
     with open(path, 'wb') as f:
@@ -1010,48 +1048,48 @@ def test_algebraic_distance():
     #test1: nodes nearby on the path graph should land nearby
     print('test path ...')
     G1 = nx.path_graph(10)
-    distance1 = algebraic_distance(G1, params={'all_pairs_distance':False})  #usual regime
+    distance1 = algebraic_distance(G1, params={'all_pairs_distance': False})  #usual regime
     true_distance1 = []
     alg_distance1 = []
     for node1 in G1:
         for node2 in G1.neighbors(node1):
             if node1 > node2:
                 continue
-            true_distance1.append(abs(node1-node2))
+            true_distance1.append(abs(node1 - node2))
             alg_distance1.append(distance1[node1][node2])
 
     assert distance1[0][1] == distance1[1][0]
-    val1 = np.corrcoef(true_distance1, alg_distance1)[0,1]
+    val1 = np.corrcoef(true_distance1, alg_distance1)[0, 1]
     print('correlation: %.2f' % val1)
     assert val1 > 0.8
     print('passed.')
 
     print('test grid')
-    G2=nx.grid_graph(dim=[10,10])
-    distance2 = algebraic_distance(G2, params={'all_pairs_distance':True})
+    G2 = nx.grid_graph(dim=[10, 10])
+    distance2 = algebraic_distance(G2, params={'all_pairs_distance': True})
     true_distance2 = []
     alg_distance2 = []
     for node1 in G2:
         for node2 in G2:
             if sum(node1) > sum(node2):
                 continue
-            true_distance2.append(abs(node1[0]-node2[0]) + abs(node1[1]-node2[1]))
+            true_distance2.append(abs(node1[0] - node2[0]) + abs(node1[1] - node2[1]))
             alg_distance2.append(distance2[node1][node2])
 
-    val2 = np.corrcoef(true_distance2, alg_distance2)[0,1]
+    val2 = np.corrcoef(true_distance2, alg_distance2)[0, 1]
     print('correlation: %.2f' % val2)
     assert val2 > 0.5
 
-    val1 = np.corrcoef(true_distance1, alg_distance1)[0,1]
+    val1 = np.corrcoef(true_distance1, alg_distance1)[0, 1]
 
-    distance2sp = algebraic_distance_sparse(G2, params={'all_pairs_distance':True})
+    distance2sp = algebraic_distance_sparse(G2, params={'all_pairs_distance': True})
     err2 = 0
     for node1 in G2:
         for node2 in G2:
             if sum(node1) > sum(node2):
                 continue
             err2 += abs(distance2sp[node1][node2] - distance2[node1][node2])
-    err2 = err2/G.number_of_edges()
+    err2 = err2 / G.number_of_edges()
     print('  mean gap for pair: %.f' % (err2))
     assert err2 < 0.1
 
@@ -1071,7 +1109,7 @@ def test_average_path_length():
     print('Estimate: %f' % estimated_avg)
     print('True:     %f' % true_avg)
 
-    assert abs(estimated_avg-true_avg)/true_avg < 0.03
+    assert abs(estimated_avg - true_avg) / true_avg < 0.03
     print('PASSED')
 
 
@@ -1092,10 +1130,10 @@ def test_bfs():
     assert 4 not in distances_path1
 
     ER100 = nx.erdos_renyi_graph(100, 0.02)
-    true_d       = nx.all_pairs_shortest_path_length(ER100)
+    true_d = nx.all_pairs_shortest_path_length(ER100)
     cc1 = nx.connected_components(ER100)[0]
     for node1 in cc1:
-        horizon_d_node1    = bfs_distance_with_horizon(ER100, source=node1, horizon=4)
+        horizon_d_node1 = bfs_distance_with_horizon(ER100, source=node1, horizon=4)
         horizon_dinf_node1 = bfs_distance_with_horizon(ER100, source=node1, horizon=1000)
         for node2 in cc1:
             if node2 in horizon_d_node1:
@@ -1103,7 +1141,7 @@ def test_bfs():
             assert true_d[node1][node2] == horizon_dinf_node1[node2]
     print('PASSED')
 
-    s='''
+    s = '''
     import networkx as nx
     import UtilityAlloc
     #G = nx.grid_2d_graph(10, 10)
@@ -1112,7 +1150,7 @@ def test_bfs():
     UtilityAlloc.bfs_distance_with_horizon(G, source=15, horizon=10)
     '''
     import timeit
-    t=timeit.Timer(stmt=s)
+    t = timeit.Timer(stmt=s)
     num_trials = 100
     print('%f usec/pass' % (t.timeit(number=num_trials) / num_trials))
 
@@ -1132,7 +1170,7 @@ def test_inverse_mean_path_length():
     print('Estimate: ' + str(eff_est))
     eff_tru = average_all_pairs_inverse_shortest_path_estimate(G, max_num_sources=G.number_of_nodes())
     print('True:     ' + str(eff_tru))
-    assert abs(eff_est-eff_tru)/eff_tru < 0.05
+    assert abs(eff_est - eff_tru) / eff_tru < 0.05
     print('PASSED')
 
 
@@ -1157,27 +1195,28 @@ def write_dot_helper(G, path, encoding='utf-8'):
         header = 'strict graph ' + getattr(G, 'name', 'replica') + ' {\n'.encode(encoding)
         f.write(header)
         for line in nx.generate_edgelist(G, ' -- ', False):
-            line =' %s;\n'%line
+            line = ' %s;\n' % line
             f.write(line.encode(encoding))
         f.write('}\n'.encode(encoding))
+
 
 def write_graph(G, path, params={}, list_types_and_exit=False):
     '''reads graph from path, using automatic detection of graph type
     '''
 
     writers = {
-            'adjlist':nx.write_adjlist,
-            'dot':nx.drawing.nx_agraph.write_dot,
-            'xdot':nx.drawing.nx_agraph.write_dot,
-            'edges':nx.write_edgelist,
-            'elist':nx.write_edgelist,
-            'edgelist':nx.write_edgelist,
-            'weighted_edgelist':nx.write_weighted_edgelist,
-            'graphml':nx.write_graphml,
-            'gml':nx.write_gml,
-            'gpickle':nx.write_gpickle,
-            'pajek':nx.write_pajek,
-            'yaml':nx.write_yaml}
+        'adjlist': nx.write_adjlist,
+        'dot': nx.drawing.nx_agraph.write_dot,
+        'xdot': nx.drawing.nx_agraph.write_dot,
+        'edges': nx.write_edgelist,
+        'elist': nx.write_edgelist,
+        'edgelist': nx.write_edgelist,
+        'weighted_edgelist': nx.write_weighted_edgelist,
+        'graphml': nx.write_graphml,
+        'gml': nx.write_gml,
+        'gpickle': nx.write_gpickle,
+        'pajek': nx.write_pajek,
+        'yaml': nx.write_yaml}
     if os.name == 'nt':
         writers['dot'] = write_dot_helper
         writers['xdot'] = write_dot_helper
@@ -1186,7 +1225,7 @@ def write_graph(G, path, params={}, list_types_and_exit=False):
         return writers.keys()
 
     write_params = params.get('write_params', {})
-    skip_sanity  = params.get('skip_sanity', False)
+    skip_sanity = params.get('skip_sanity', False)
 
     graph_type = os.path.splitext(path)[1][1:]
 
@@ -1201,34 +1240,44 @@ def write_graph(G, path, params={}, list_types_and_exit=False):
             nx.drawing.nx_agraph.write_dot(G, path)
             print('Done.')
     else:
-        raise Exception('Unable to write graphs of type: ' + str(graph_type))
+        raise ValueError('Unable to write graphs of type: ' + str(graph_type))
 
 
 #runningtime based on the power on the V or E.  e.g. 1 linear, 2 quadratic etc.
 default_metrics = []
-default_metrics += [{'name':'num nodes',          'weight':1, 'optional':0, 'runningtime': 1, 'function':nx.number_of_nodes}]
-default_metrics += [{'name':'density',            'weight':1, 'optional':2, 'runningtime': 1, 'function':nx.density}]
-default_metrics += [{'name':'num edges',          'weight':1, 'optional':0, 'runningtime': 1, 'function':nx.number_of_edges}]
-default_metrics += [{'name':'num comps',          'weight':1, 'optional':0, 'runningtime': 1, 'function':nx.number_connected_components}]
-default_metrics += [{'name':'clustering',         'weight':1, 'optional':0, 'runningtime': 1, 'function':nx.average_clustering}]
-default_metrics += [{'name':'average degree',     'weight':1, 'optional':0, 'runningtime': 1, 'function':a_avg_degree}]
-default_metrics += [{'name':'degree assortativity', 'weight':1, 'optional':2, 'runningtime': 1, 'function':degree_assortativity}]
-default_metrics += [{'name':'degree connectivity', 'weight':1, 'optional':2, 'runningtime': 1, 'function':a_degree_connectivity}]
+default_metrics += [{'name': 'num nodes', 'weight': 1, 'optional': 0, 'runningtime': 1, 'function': nx.number_of_nodes}]
+default_metrics += [{'name': 'density', 'weight': 1, 'optional': 2, 'runningtime': 1, 'function': nx.density}]
+default_metrics += [{'name': 'num edges', 'weight': 1, 'optional': 0, 'runningtime': 1, 'function': nx.number_of_edges}]
+default_metrics += [
+    {'name': 'num comps', 'weight': 1, 'optional': 0, 'runningtime': 1, 'function': nx.number_connected_components}]
+default_metrics += [
+    {'name': 'clustering', 'weight': 1, 'optional': 0, 'runningtime': 1, 'function': nx.average_clustering}]
+default_metrics += [{'name': 'average degree', 'weight': 1, 'optional': 0, 'runningtime': 1, 'function': a_avg_degree}]
+default_metrics += [
+    {'name': 'degree assortativity', 'weight': 1, 'optional': 2, 'runningtime': 1, 'function': degree_assortativity}]
+default_metrics += [
+    {'name': 'degree connectivity', 'weight': 1, 'optional': 2, 'runningtime': 1, 'function': a_degree_connectivity}]
 
-default_metrics += [{'name':'total deg*deg',       'weight':1, 'optional':0, 'runningtime': 1, 'function':a_s_metric}]
+default_metrics += [{'name': 'total deg*deg', 'weight': 1, 'optional': 0, 'runningtime': 1, 'function': a_s_metric}]
 #wishlist: make default
-default_metrics += [{'name':'mean ecc',           'weight':1, 'optional':1, 'runningtime': 3.5, 'function':a_eccentricity}]
-#default_metrics += [{'name':'L eigenvalue sum',   'weight':1, 'optional':0, 'runningtime': 3, 'function':lambda G: sum(nx.spectrum.laplacian_spectrum(G)).real}]
-default_metrics += [{'name':'average shortest path',   'weight':1, 'optional':0, 'runningtime': 3, 'function':a_avg_shortest}]
-default_metrics += [{'name':'harmonic mean path',   'weight':1, 'optional':0, 'runningtime': 3, 'function':a_avg_harmonic}]
+default_metrics += [{'name': 'mean ecc', 'weight': 1, 'optional': 1, 'runningtime': 3.5, 'function': a_eccentricity}]
+# this gives a default_metrics += [{'name':'L eigenvalue sum',   'weight':1, 'optional':0, 'runningtime': 3, 'function':lambda G: sum(nx.spectrum.laplacian_spectrum(G)).real}]
+default_metrics += [
+    {'name': 'average shortest path', 'weight': 1, 'optional': 0, 'runningtime': 3, 'function': a_avg_shortest}]
+default_metrics += [
+    {'name': 'harmonic mean path', 'weight': 1, 'optional': 0, 'runningtime': 3, 'function': a_avg_harmonic}]
 #flow_closeness appears to be broken in NX 1.6
-default_metrics += [{'name':'avg flow closeness',   'weight':1, 'optional':1, 'runningtime': 3, 'function':average_flow_closeness}]
+default_metrics += [
+    {'name': 'avg flow closeness', 'weight': 1, 'optional': 1, 'runningtime': 3, 'function': average_flow_closeness}]
 #wishlist: make optional for speed
-default_metrics += [{'name':'avg eigvec centrality',   'weight':1, 'optional':0, 'runningtime': 3, 'function':average_eigenvector_centrality}]
+default_metrics += [{'name': 'avg eigvec centrality', 'weight': 1, 'optional': 0, 'runningtime': 3,
+                     'function': average_eigenvector_centrality}]
 #wishlist: make default
-default_metrics += [{'name':'avg between. central.',   'weight':1, 'optional':1, 'runningtime': 4, 'function':a_avg_between}]
-default_metrics += [{'name':'modularity',          'weight':1, 'optional':0, 'runningtime': 2, 'function':community.louvain_modularity}]
-default_metrics += [{'name':'powerlaw exp',          'weight':1, 'optional':0, 'runningtime': 3, 'function':powerlaw_mle}]
+default_metrics += [
+    {'name': 'avg between. central.', 'weight': 1, 'optional': 1, 'runningtime': 4, 'function': a_avg_between}]
+default_metrics += [
+    {'name': 'modularity', 'weight': 1, 'optional': 0, 'runningtime': 2, 'function': community.louvain_modularity}]
+default_metrics += [{'name': 'powerlaw exp', 'weight': 1, 'optional': 0, 'runningtime': 3, 'function': powerlaw_mle}]
 #'optional' runs from 0 (always used) to 5 (never)
 
 

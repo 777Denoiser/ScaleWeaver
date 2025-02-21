@@ -130,7 +130,7 @@ def kronecker_replicate(original=None, params=None):
                        "%s" % stderr_path,
                        # "&"
                        ]
-    # ret = subprocess.call(replicator_cmdl)
+    # here is the ret = subprocess.call(replicator_cmdl)
     ret = os.system(' '.join(replicator_cmdl))
     assert ret == 0
 
@@ -170,32 +170,31 @@ def test1():
     assert UtilityAlloc.graph_santity_test(rand_noise2)
     assert UtilityAlloc.graph_santity_test(kron)
 
-    print
-    'Test 1 passed!'
+    print('Test 1 passed!')
 
 
 def test2_sf():
     G = nx.path_graph(1000)
     replica = scalefree_replicate(G)
-    print
-    'Original:'
-    print
-    G.number_of_nodes(), G.number_of_edges()
-    print
-    'Replica:'
-    print
-    replica.number_of_nodes(), replica.number_of_edges()
+    print(
+    'Original:')
+    print(
+    G.number_of_nodes(), G.number_of_edges())
+    print(
+    'Replica:')
+    print(
+    replica.number_of_nodes(), replica.number_of_edges())
 
     G = nx.erdos_renyi_graph(900, p=0.01)
     replica = scalefree_replicate(G)
-    print
-    'Original:'
-    print
-    G.number_of_nodes(), G.number_of_edges()
-    print
-    'Replica:'
-    print
-    replica.number_of_nodes(), replica.number_of_edges()
+    print(
+    'Original:')
+    print(
+    G.number_of_nodes(), G.number_of_edges())
+    print(
+    'Replica:')
+    print(
+    replica.number_of_nodes(), replica.number_of_edges())
 
 
 def watts_strogatz_replicate(original, params=None):
